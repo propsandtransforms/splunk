@@ -112,11 +112,11 @@ Installation
 - Splunk must be manually started on \*NIX until boot-start is enabled
 
 Run as root:
-./splunk enable boot-start (init.d)
-./splunk enable boot-start -systemd-managed 1 (systemd)
+> ./splunk enable boot-start (init.d)
+> ./splunk enable boot-start -systemd-managed 1 (systemd)
 
 Run as root:
-./splunk enable boot-start –user bob
+> ./splunk enable boot-start –user bob
 
 On Windows, the installer configures Splunk software to start at machine
 startup
