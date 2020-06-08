@@ -125,7 +125,6 @@ startup
 - The service starts and stops like any Windows services
 - Can be disabled if needed
 
-
 ### Splunk Deployment - Distibuted
 
 ### 2.0 License Management
