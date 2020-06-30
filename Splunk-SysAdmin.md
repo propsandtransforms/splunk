@@ -84,13 +84,13 @@ Splunk scales from a single server to a **distributed infrastructure**
 - Linux setting recommendations
 - Server hardware recommendations
 
-####POST-INSTALLATION CONFIGURATION
+#### POST-INSTALLATION CONFIGURATION
 
 Run Splunk at boot
 - Configure system settings
 - Optionally, enable Monitoring Console
 
-####WHAT SOFTWARE DO YOU INSTALL?
+#### WHAT SOFTWARE DO YOU INSTALL?
 
 Splunk Enterprise includes 
 - Indexer
@@ -103,7 +103,7 @@ Splunk Enterprise includes
 Universal Forwarder includes
 - Deployment Client
 
-####Installation
+#### Installation
 - Splunk starts automatically on Windows
 - Splunk must be manually started on \*NIX until boot-start is enabled
 
@@ -121,14 +121,14 @@ startup
 - The service starts and stops like any Windows services
 - Can be disabled if needed
 
-####Time Synchronization
+#### Time Synchronization
 - Best practice: Use a time synchronization service such as NTP
 - Splunk searches depend on accurate time
 - Correct event timestamping is essential
 - It is imperative that your Splunk indexer and production servers have standardized time configuration
 - Clock skew between hosts can affect search results
 
-####Splunk Default Ports
+#### Splunk Default Ports
 
 | Usage| Splunk Enterprise | Universal Forwarder |
 | ----- | ----------------- | ------------------- |
@@ -141,7 +141,7 @@ startup
 | Index replication port(s) | No default | - |
 | Search replication port(s) | No default | - |
 
-####Linux Setting Recommendations
+#### Linux Setting Recommendations
 
 * Increase ulimit settings
 * The following OS parameters need to be increased to allow for a large number  of buckets/forwarders/users (https://docs.splunk.com/Documentation/Splunk/latest/Troubleshooting/ulimitErrors)
@@ -151,11 +151,11 @@ startup
 
 * Turn Transparent Huge Pages (THP) off on Splunk Enterprise servers (https://docs.splunk.com/Documentation/Splunk/latest/ReleaseNotes/SplunkandTHP)
 
-####Reference Servers Hardware
+#### Reference Servers Hardware
 
 * Hardware requirements and sizing are discussed in detail in Architecting and Deploying Splunk class (https://docs.splunk.com/Documentation/Splunk/latest/Capacity/Referencehardware)
 
-####splunkd
+#### splunkd
 
 * Runs on port 8089 (default) using SSL
 * Spawns and controls Splunk child processes (helpers)
@@ -164,13 +164,13 @@ startup
 * Accesses, processes, and indexes incoming data
 * Handles all search requests and returns results
 
-####Splunk Web
-
+#### Splunk Web
+ 
 * Splunk Web is browser-based user interface
 * Provides both a search and management front end for splunkd process
 * Runs on port 8000 by default
 
-####The Splunk Command Line Interface (CLI)
+#### The Splunk Command Line Interface (CLI)
 
 * splunk is an executable command in the bin directory
 * Same syntax is used on all supported platforms
@@ -187,13 +187,13 @@ startup
 | splunk show servername | Show the servername of this instance |
 | splunk show default-hostname | Show the default host name used for all data inputs |
 
-####Enabling MC in Standalone Mode
+#### Enabling MC in Standalone Mode
 
 * MC runs un-configured in standalone mode by default
 * To enable, click *Settings > General Setup > Apply Changes*
 * You must Apply Changes to initialize the MC and after any change
 
-####Enabling MC Platform Alerts
+#### Enabling MC Platform Alerts
 
 * Effective operation of your Splunk environment is timely identification and notification of critical conditions
 * Any item over 80% mark can’t be good
@@ -771,16 +771,16 @@ Forward all search head indexes to the search peer (indexer) layer
 
 | Input phase | Parsing phase |
 | ----------- | ------------- |
-| * Most efficient, but low discrimination | * Less efficient, but finer
+| Most efficient, but low discrimination | Less efficient, but finer
 control |
-| * Acquires data from source | * Breaks data into events with
+| Acquires data from source | Breaks data into events with
 timestamps |
-| * Sets initial metadata fields: source, sourcetype, host, index, etc. | *
+| Sets initial metadata fields: source, sourcetype, host, index, etc. | *
 Applies event-level transformations |
-| * Converts character encoding | * Fine-tunes metadata settings from
+| Converts character encoding | Fine-tunes metadata settings from
 inputs phase |
-| * Operates on the entire data stream | * Operates on individual events |
-| * Most configuration done in inputs.conf on forwarder | * Most configuration
+| Operates on the entire data stream | Operates on individual events |
+| Most configuration done in inputs.conf on forwarder | Most configuration
 done in props.conf on indexer (Also: transforms.conf) |
 |   - Some configuration is in props.conf | |
 
