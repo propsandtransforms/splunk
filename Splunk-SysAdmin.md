@@ -771,18 +771,13 @@ Forward all search head indexes to the search peer (indexer) layer
 
 | Input phase | Parsing phase |
 | ----------- | ------------- |
-| Most efficient, but low discrimination | Less efficient, but finer
-control |
-| Acquires data from source | Breaks data into events with
-timestamps |
-| Sets initial metadata fields: source, sourcetype, host, index, etc. | *
-Applies event-level transformations |
-| Converts character encoding | Fine-tunes metadata settings from
-inputs phase |
+| Most efficient, but low discrimination | Less efficient, but finer control |
+| Acquires data from source | Breaks data into events with timestamps |
+| Sets initial metadata fields: source, sourcetype, host, index, etc. | Applies event-level transformations |
+| Converts character encoding | Fine-tunes metadata settings from inputs phase |
 | Operates on the entire data stream | Operates on individual events |
-| Most configuration done in inputs.conf on forwarder | Most configuration
-done in props.conf on indexer (Also: transforms.conf) |
-|   - Some configuration is in props.conf | |
+| Most configuration done in inputs.conf on forwarder (Some configuration is in props.conf) | Most configuration done in props.conf on indexer (Also: transforms.conf) |
+
 
 #### Index-Time Process
 
@@ -801,12 +796,219 @@ done in props.conf on indexer (Also: transforms.conf) |
    - License meter runs as data is initially written to disk, prior to compression
    - After data is written to disk, it cannot be changed
 
+#### Understanding Source Types
+
+- Source type is Splunk’s way of categorizing the type of data Splunk indexing
+  processes frequently reference source type
+
+  - Many searches, reports, dashboards, apps, etc. also rely on source type
+
+- Splunk will try to determine the source type for you 
+
+  - If Splunk recognizes the data, then it assigns one from the pretrained sourcetypes
+
+  - If one is explicitly specified, then Splunk will not try to determine the source type
+    You can explicitly set source type with Splunk Web, CLI, or by modifying
+    inputs.conf
+
+  - Otherwise, Splunk uses the name of the file as the source type
+
+- You can also add source types by installing apps, which often define source
+  types for their inputs
+
 ### 10.0 Configuring Forwarders
 
 ```
     10.1     Configure Forwarders
     10.2    Identify additional Forwarder options
 ```
+
+#### Forwarder Configuration Files
+
+- Forwarders require outputs.conf
+  - outputs.conf points the forwarder to the receiver(s)
+  - Can specify additional options for load balancing, SSL, compression,
+    alternate indexers, and indexer acknowledgement
+
+```
+outputs.conf
+[tcpout:splunk_indexer]
+server = 10.1.2.3:9997
+
+inputs.conf
+[splunktcp://9997]
+```
+
+#### Defining Target Indexers on the Forwarder
+
+- Execute on the forwarder: splunk add forward-server indexer:receiving-port
+
+- For example, splunk add forward-server 10.1.2.3:9997 configure the
+  outputs.conf as follows>
+
+  [tcpout]
+  defaultGroup = default-autolb-group
+  [tcpout-server://10.1.2.3:9997]
+  [tcpout:default-autolb-group]
+  disabled = false
+  server = 10.1.2.3:9997
+
+#### Testing the Connection
+
+Indexer:
+
+>From CLI, run splunk display listen
+
+Forwarder:
+
+- To view current forwarder to indexer configuration, run
+
+>splunk list forward-server
+
+- To remove the target indexer setting, run
+
+>splunk remove forward-server indexer:port
+
+
+#### Troubleshooting Forwarder Connection
+
+- Is the forwarder sending data to the indexer?
+
+> tail –f var/log/splunk/splunkd.log | egrep 'TcpOutputProc|TcpOutputFd'
+
+- Does the indexer receive any data on the listening port?
+
+> index=\_internal sourcetype=splunkd component=TcpInputConfig OR
+(host=<uf> component=StatusMgr)
+
+#### Additional Forwarding Options
+
+- Compressing the feed
+- Securing the feed
+- Automatic load balancing to multiple indexers
+- Forwarder queue size
+- Indexer acknowledgement to forwarder
+
+#### Compressing the Feed
+
+> compressed = true
+
+#### Securing the Feed – SSL
+
+Turning on SSL:
+- Can increase the CPU usage
+- Automatically compresses the feed
+- Encrypts password
+
+outputs.conf
+
+```
+[tcpout:splunk_indexer]
+server = 10.1.2.3:9997
+sslPassword = ssl_for_m3
+sslCertPath = SPLUNK_HOME/etc/auth/cert1/server.pem
+sslRootCAPath = SPLUNK_HOME/etc/auth/cert1/cacert.pem
+```
+
+inputs.conf
+
+````
+[splunktcp-ssl:9997]
+[ssl]
+password = ssl_for_m3
+serverCert = SPLUNK_HOME/etc/auth/cert1/server.pem
+rootCA = SPLUNK_HOME/etc/auth/cert1/cacert.pem
+```
+
+#### Notes About SSL
+
+- Splunk uses OpenSSL to generate its default certificates
+  - Default certificate password is password
+
+- You should use external certs OR create new ones using Splunk’s OpenSSL
+
+#### Automatic Load Balancing
+
+- Automatic load balancing switches from server to server in a list
+  - Switch happens only when the forwarder detects an EOF
+  - Time-based load balancing default frequency is 30 seconds
+  - Volume-based load balancing is set on how much data a forwarder sends
+    before switching
+
+- Load balancing is the key to making distributed search or clustering work
+  efficiently
+
+outputs.conf
+
+```
+[tcpout:splunk_indexer]
+server = splunk1:9997,splunk2:9997,splunk3:9997
+```
+#### Defining Event Boundary on UF
+
+- Normally, event boundary is determined on the indexer
+- The UF does not know when it is safe to switch to the next indexer,
+unless:
+  - An EOF is detected
+  - Or, a short break in IO activity
+
+- Potential side effects
+  - Streaming data (syslog) can prevent a UF from switching
+  - A multi-line data (log4j) can result in event splits
+    Especially if the application has pauses in writing its log file
+
+- Solution
+  - Enable event breaker on the UF per sourcetype
+
+- Add the event breaker settings on UF per sourcetype in
+  props.conf
+
+  - Single event
+  ```
+  [my_syslog]
+  EVENT_BREAKER_ENABLE = true
+  ```
+
+  - Multi-line event
+  ```
+  [my_log4j]
+  EVENT_BREAKER_ENABLE = true
+  EVENT_BREAKER = ([\r\n]+)\d\d\d\d-\d\d-\d\d
+  ```
+
+#### Caching/Queue Size in outputs.conf
+
+- maxQueueSize = 500kb (default) is the maximum amount of data the forwarder
+  queues if the target receiver cannot be reached
+
+#### Indexer Acknowledgement
+
+- Guards against loss of data when forwarding to an indexer
+  - Forwarder resends any data not acknowledged as "received" by the indexer
+
+- Disabled by default
+- Can also be used for forwarders sending to an intermediate forwarder
+- Automatically increases the wait queue to 3x the size of maxQueueSize to meet
+  larger space requirement for acknowledgement
+
+outputs.conf
+
+```
+[tcpout:splunk_indexer]
+useACK = true
+```
+
+#### Useful Commands
+
+| Command | Operation |
+| ------- | --------- |
+| From the forwarder  |
+| ./splunk add forward-server | Configures the forwarder to connect the receiving indexer |
+| ./splunk list forward-server | Displays the current receiving indexer configuration  |
+| ./splunk remove forward-server | Removes the receiving indexer from the forwarder |
+| From the Receiver |
+| ./splunk enable listen | Configures the Splunk receiving port number |
+| ./splunk display listen | Displays the current Splunk receiving port number |
 
 ### 11.0 Forwarder Management
 
