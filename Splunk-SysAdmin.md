@@ -912,7 +912,7 @@ sslRootCAPath = SPLUNK_HOME/etc/auth/cert1/cacert.pem
 
 inputs.conf
 
-````
+```
 [splunktcp-ssl:9997]
 [ssl]
 password = ssl_for_m3
