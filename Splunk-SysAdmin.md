@@ -1145,6 +1145,144 @@ phoneHomeIntervalInSecs = 600
     12.3    Deploy a remote monitor input
 ```
 
+#### Monitoring Files
+
+- A monitor input defines a specific file as the data source
+  - The current content of the file is ingested
+  - The file is continuously monitored for new content
+  - Splunk tracks file status and automatically continues monitoring at the
+    correct file location after a restart
+
+- The file monitor supports any text file format, such as:
+  - Plain text data files
+  - Structured text files, such as CSV, XML, JSON
+  - Multi-line logs, such as Log4J
+  - Splunk can also read files compressed with gzip
+
+#### Monitoring Directories
+
+- A monitor input can define a directory tree as the data source
+  - Splunk recursively traverses through the directory structure
+  - All discovered text files are consumed, including compressed files
+    - Unzips compressed files automatically before ingesting them, one at a time
+  - Any files added to the directory tree in the future are included
+    - Automatically detects and handles log file rotation
+
+- The input settings are applied to all files in the directory 
+  - sourcetype, host and index -- if specified -- are applied to all files in
+    the tree
+  - source= the file name (absolute path)
+  - Automatic sourcetyping is recommended for directories that contain mixed
+    file types
+    - Can override exceptions manually
+    - Automatic sourcetyping is disabled if the sourcetype attribute is defined
+
+#### Monitor Input Options in inputs.conf
+
+```
+[monitor://<path>]
+disabled=[0|1|false|true]
+sourcetype=<string>
+host=<string>
+index=<string>
+blacklist=<regular expression>
+whitelist=<regular expression>
+```
+
+- Source (after monitor:// in stanza header) is an absolute path to a file or
+  directory
+  - Can contain a wildcard
+
+- All attributes (sourcetype, host, index, etc.) are optional
+
+- Defaults apply if omitted
+  - Default host is defined in etc/system/local/inputs.conf
+  - Default source is the fully-qualified file name
+  - Default sourcetype is automatic
+
+#### File Pathname Wildcards
+
+Monitor stanzas in inputs.conf support two wildcards to help you specify the
+files/directories you want to index
+
+"..." The ellipsis wildcard recurses through directories and subdirectories to
+match.
+
+"\*" The asterisk wildcard matches anything in that specific directory path
+segment but does not go beyond that segment in the path. Normally it should be
+used at the end of a path.
+
+#### Additional Options
+
+- Whitelist and Blacklist
+  - Regular expressions to filter files or directories from the input
+  - In case of a conflict between a whitelist and a blacklist, the blacklist
+    prevails
+
+- Follow tail (followTail)
+  - Splunk ignores existing content in the file, but indexes new data as it arrives
+  - DO NOT leave followTail enabled indefinitely
+
+- Consider using ignoreOlderThan, if applicable
+  - A file whose modtime falls outside this time window will not be indexed
+    - After a file is ignored, it will never be considered as an input again,
+      even if it is updated
+  - ignoreOlderThan = 60d
+
+#### Overriding the Host Field
+
+- You can override the default host value 
+  - Explicitly set the host value
+  - Set the host based on a directory name
+  - Set the host based on a regular expression
+
+Setting the Host: 
+
+host_segment = <integer>
+
+host_regex = <regular expression>
+
+host_regex to \w+(vmail.+)\.log$ selects the second part of the log file name
+as its host name
+
+#### Creating a Remote Data Input
+
+After deployment clients are working, you can create deployment apps for
+configuring inputs on the clients
+
+Uses deployment server to distribute the inputs.conf
+
+#### Editing Inputs
+
+- Editing inputs.conf only applies changes to new data, it does not change the
+  data
+
+- Splunk monitor (file or directory) inputs are tracked by the fishbucket
+  - Ensures that data is not missed or duplicated
+  - Keeps checkpoints and other information for each input
+
+- Splunk does not re-index when inputs.conf is edited
+- To re-index
+  - Delete the old (erroneous) data on the indexer(s)
+    - May require assistance from the System Admin
+  - Change the inputs.conf on the deployment server (or forwarders)
+  - Reset the fishbucket checkpoint on the involved forwarders
+  - Restart Splunk forwarders
+
+#### The Fishbucket and btprobe Command
+
+To reset the checkpoint for an individual input, use the btprobe
+command:
+
+splunk cmd btprobe -d SPLUNK_HOME/var/lib/splunk/ fishbucket/splunk_private_db
+--file <source> --reset
+
+Requires stopping the forwarder or indexer
+
+It is possible to clear all checkpoints, but this is
+only recommended for test environments:
+- splunk clean eventdata \_thefishbucket
+
 ### 13.0 Network and Scripted Inputs
 
 ```
@@ -1153,11 +1291,236 @@ phoneHomeIntervalInSecs = 600
     13.3    Create a basic scripted input
 ```
 
+inputs.conf
+
+```
+udp://[host:]port]
+connection_host = dns
+sourcetype=<string>
+[tcp://[host:]port]
+connection_host
+```
+
+Network Input: Host Field
+
+- The connection_host attribute defines how the host field is set:
+  - dns (UI default)
+    The host is set to a DNS name using reverse IP lookup
+  - ip
+    The host is set to the originating host's IP address
+  - none (Custom)
+    Explicitly set the host value
+
+Network Input: acceptFrom
+
+- acceptFrom = <network_acl>
+  - List address rules separated by commas or spaces
+    A single IPv4 or IPv6 address
+    A CIDR block of addresses
+    A DNS name
+    A wildcard ‘*’ and ‘!’
+
+Network Input: Memory Queues
+
+[tcp://9001]
+queueSize=10MB
+
+- This is a memory-resident queue that can buffer data before forwarding
+
+- Defaults to 500KB
+
+- Useful if the indexer cannot always receive the data as fast as the forwarder
+  is acquiring it
+
+- Independent of the forwarder's maxQueueSize attribute defined in outputs.conf
+
+Network Input: Persistent Queues
+
+[tcp://9001]
+queueSize=10MB
+persistentQueueSize=5GB
+
+- Provides file-system buffering of data
+- Adds additional buffer space after memory buffer
+- You must set a queueSize first
+- A persistent queue is written to disk on the forwarder in
+  SPLUNK_HOME/var/run/splunk/...
+
+- Useful for high-volume data that must be preserved in situations where it
+  cannot be forwarded, such as if the network is unavailable, etc.
+
+#### Scripted Inputs
+
+- Splunk can run:
+  - Shell scripts (.sh) on \*nix
+  - Batch (.bat) and PowerShell (.ps1) on Windows
+  - Python (.py) on any platform
+
+#### Scripted Input Stanza
+
+Splunk only executes scripts from
+
+SPLUNK\_HOME/etc/apps/<app_name>/bin,
+
+SPLUNK\_HOME/bin/scripts, OR
+
+SPLUNK\_HOME/etc/system/bin
+
+```
+[script://<cmd>]
+passAuth = <username>
+host = <as indicated>
+source = <defaults to script name>
+sourcetype = <defaults to script name>
+interval = <number in seconds or cron syntax>
+```
+
+To test the script from the Splunk perspective, run splunk cmd scriptname
+
+```
+[script://./bin/myvmstat.sh]
+disabled = false
+interval = 60.0
+source = vmstat
+sourcetype = myvmstat
+```
+
+- You can declare the same queueSize and persistentQueueSize attributes for a
+  script stanza as for network (TCP and UDP) inputs
+
+- Buffers data on the forwarder when the network or indexer is not available
+
 ### 14.0 Agentless Inputs
 
 ```
    14.1    Identify Windows input types and uses
    14.2    Describe HTTP Event Collector
+```
+#### Windows-Specific Inputs
+
+• Windows OS maintains much of its state data (logs, etc.) in binary format
+  - Windows provides APIs that enable programmatic access to this information
+
+• Splunk provides special input types to access this data
+  - All other input types are also supported
+  - Data can be forwarded to any Splunk indexer on any OS platform
+  - Windows Universal Forwarder can run as domain user without the local administrator privilege
+
+#### Windows-Specific Input Types
+
+| Input Type | Description |
+| ---------- | ----------- |
+| Event Log\* | Consumes data from the Windows OS logs |
+|Performance\* | Consumes performance monitor data |
+|Active Directory | Monitors changes in an Active Directory server |
+|Registry | Monitors changes in a Windows registry |
+|Host | Collects data about a Windows server |
+|Network | Monitors network activity on a Windows server |
+|Print | Monitors print server activity |
+
+#### Local Windows Inputs Syntax
+
+```
+[admon://name]
+[perfmon://name]
+[WinEventLog://name]
+[WinHostMon://name]
+[WinNetMon://name]
+[WinPrintMon://name]
+[WinRegMon://name]
+```
+
+```
+[WinEventLog://Security]
+checkpointInterval = 5
+current_only = 0
+disabled = 0
+start_from = oldest
+```
+
+Can configure up to 10 whitelist and 10 blacklist per stanza
+Blacklist overrides whitelist if conflicts occur
+
+```
+[WinEventLog://Security]
+disabled=0
+whitelist1= EventCode=/^[4|5].*$/ Type=/Error|Warning/
+whitelist2= TaskCategory=%^Log.*$%
+blacklist = 540
+```
+
+#### Local vs. Remote Windows (WMI) Inputs
+
+• You can configure remote inputs (WMI) for two types of Windows
+inputs:
+– Event logs
+– Performance monitor
+
+• Disadvantage:
+– Uses WMI as a transport protocol
+– Not recommended in high latency networks
+– Requires Splunk to run as a domain account
+
+##### WMI Inputs
+
+[WMI:remote-logs]
+interval = 5
+server = server1, server2, server3
+event\_log\_file = Application, Security, System
+
+[WMI:remote-perfmon]
+interval = 5
+server = server1,server2, server3
+wql = Select DatagramsPersec
+
+#### Powershell Input
+
+Uses built-in powershell.exe scripting facility in Windows
+- No custom external library dependencies
+
+```
+[powershell://<name>]
+script = <command>
+schedule =
+[<number>|<cron>]
+```
+#### HTTP Event Collector Options
+
+• Enable HEC acknowledgments
+• Send raw payloads
+• Configure dedicated HTTP settings
+
+##### HEC Indexer Acknowledgement
+
+1.  A request is sent from a client to the HEC endpoint using a token with indexer acknowledgment enabled
+2. The server returns an acknowledgment identifier (ackID) to the client
+3. The client can then query the Splunk server with the identifier to verify whether all the events in the sent request of have been indexed
+4. The Splunk server responds with the status information of each queried request
+
+#### Sending Raw Payloads to HEC
+
+• Example: Application developers want to send data in a proprietary format
+• Solution: HEC allows any arbitrary payloads, not just JSON
+
+```
+curl "http[s]://<splunk_server>:8088/services/collector/raw?
+channel=<client_provided_channel>"
+-H "Authorization: Splunk <generated_token>"
+-d 'ERR,401,-23,15,36
+```
+
+#### Configuring Dedicated HTTP Settings
+
+• Example: Splunk admins want to limit who can access the HEC endpoints
+• Solution: Manually add the dedicated server settings in inputs.conf
+
+inputs.conf
+```
+[http]
+enableSSL = 1
+crossOriginSharingPolicy = *.splunk.com
+acceptFrom = "!45.42.151/24, !57.73.224/19,
+*"
 ```
 
 ### 15.0 Fine Tuning Inputs
@@ -1167,6 +1530,8 @@ phoneHomeIntervalInSecs = 600
    15.2    Configure input phase options, such as sourcetype fine-tuning and character set
            encoding
 ```
+
+
 
 ### 16.0 Parsing Phase and Data
 
