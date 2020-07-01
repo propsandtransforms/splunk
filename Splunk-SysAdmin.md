@@ -1054,38 +1054,36 @@ On the deployment client
 
 #### Monitoring Files
 
-- A monitor input defines a specific file as the data source
-  - The current content of the file is ingested
-  - The file is continuously monitored for new content
-  - Splunk tracks file status and automatically continues monitoring at the
-    correct file location after a restart
+A monitor input defines a specific file as the data source
+- The current content of the file is ingested
+- The file is continuously monitored for new content
+- Splunk tracks file status and automatically continues monitoring at the correct file location after a restart
 
-- The file monitor supports any text file format, such as:
-  - Plain text data files
-  - Structured text files, such as CSV, XML, JSON
-  - Multi-line logs, such as Log4J
-  - Splunk can also read files compressed with gzip
+The file monitor supports any text file format, such as:
+- Plain text data files
+- Structured text files, such as CSV, XML, JSON
+- Multi-line logs, such as Log4J
+- Splunk can also read files compressed with gzip
 
 #### Monitoring Directories
 
-- A monitor input can define a directory tree as the data source
-  - Splunk recursively traverses through the directory structure
-  - All discovered text files are consumed, including compressed files
-    - Unzips compressed files automatically before ingesting them, one at a time
-  - Any files added to the directory tree in the future are included
-    - Automatically detects and handles log file rotation
+A monitor input can define a directory tree as the data source
+- Splunk recursively traverses through the directory structure
+- All discovered text files are consumed, including compressed files
+  - Unzips compressed files automatically before ingesting them, one at a time
+- Any files added to the directory tree in the future are included
+  - Automatically detects and handles log file rotation
 
-- The input settings are applied to all files in the directory 
-  - sourcetype, host and index -- if specified -- are applied to all files in
-    the tree
-  - source= the file name (absolute path)
-  - Automatic sourcetyping is recommended for directories that contain mixed
-    file types
-    - Can override exceptions manually
-    - Automatic sourcetyping is disabled if the sourcetype attribute is defined
+The input settings are applied to all files in the directory 
+- sourcetype, host and index -- if specified -- are applied to all files in the tree
+- source= the file name (absolute path)
+- Automatic sourcetyping is recommended for directories that contain mixed file types
+  - Can override exceptions manually
+  - Automatic sourcetyping is disabled if the sourcetype attribute is defined
 
 #### Monitor Input Options in inputs.conf
 
+inputs.conf
 ```
 [monitor://<path>]
 disabled=[0|1|false|true]
@@ -1096,73 +1094,60 @@ blacklist=<regular expression>
 whitelist=<regular expression>
 ```
 
-- Source (after monitor:// in stanza header) is an absolute path to a file or
-  directory
-  - Can contain a wildcard
+*Source* (after monitor:// in stanza header) is an absolute path to a file or directory
+- Can contain a wildcard
 
-- All attributes (sourcetype, host, index, etc.) are optional
+All attributes (sourcetype, host, index, etc.) are **optional**
 
-- Defaults apply if omitted
-  - Default host is defined in etc/system/local/inputs.conf
-  - Default source is the fully-qualified file name
-  - Default sourcetype is automatic
+Defaults apply if omitted
+- Default host is defined in etc/system/local/inputs.conf
+- Default source is the fully-qualified file name
+- Default sourcetype is automatic
 
 #### File Pathname Wildcards
 
-Monitor stanzas in inputs.conf support two wildcards to help you specify the
-files/directories you want to index
+- Monitor stanzas in inputs.conf support two wildcards to help you specify the files/directories you want to index
 
-"..." The ellipsis wildcard recurses through directories and subdirectories to
-match.
+- "..." The ellipsis wildcard recurses through directories and subdirectories to match.
 
-"\*" The asterisk wildcard matches anything in that specific directory path
-segment but does not go beyond that segment in the path. Normally it should be
-used at the end of a path.
+- "\*" The asterisk wildcard matches anything in that specific directory path segment but does not go beyond that segment in the path. Normally it should be used at the end of a path.
 
 #### Additional Options
 
-- Whitelist and Blacklist
-  - Regular expressions to filter files or directories from the input
-  - In case of a conflict between a whitelist and a blacklist, the blacklist
-    prevails
+Whitelist and Blacklist
+- Regular expressions to filter files or directories from the input
+- In case of a conflict between a whitelist and a blacklist, the blacklist prevails
 
-- Follow tail (followTail)
-  - Splunk ignores existing content in the file, but indexes new data as it arrives
-  - DO NOT leave followTail enabled indefinitely
+Follow tail (followTail)
+- Splunk ignores existing content in the file, but indexes new data as it arrives
+- DO NOT leave followTail enabled indefinitely
 
-- Consider using ignoreOlderThan, if applicable
-  - A file whose modtime falls outside this time window will not be indexed
-    - After a file is ignored, it will never be considered as an input again,
-      even if it is updated
-  - ignoreOlderThan = 60d
+Consider using ignoreOlderThan, if applicable
+- A file whose modtime falls outside this time window will not be indexed
+  - After a file is ignored, it will never be considered as an input again, even if it is updated
+  - *ignoreOlderThan* = 60d
 
 #### Overriding the Host Field
 
-- You can override the default host value 
-  - Explicitly set the host value
-  - Set the host based on a directory name
-  - Set the host based on a regular expression
+You can override the default host value 
+- Explicitly set the host value
+- Set the host based on a directory name
+- Set the host based on a regular expression
 
 Setting the Host: 
+> host\_segment = \<integer\>  
+> host\_regex = \<regular expression\>  
 
-host_segment = <integer>
-
-host_regex = <regular expression>
-
-host_regex to \w+(vmail.+)\.log$ selects the second part of the log file name
-as its host name
+Set host\_regex to *\w+(vmail.+)\.log$* selects the second part of the log file name as its host name
 
 #### Creating a Remote Data Input
 
-After deployment clients are working, you can create deployment apps for
-configuring inputs on the clients
-
-Uses deployment server to distribute the inputs.conf
+- After deployment clients are working, you can create deployment apps for configuring inputs on the clients
+- Uses deployment server to distribute the inputs.conf
 
 #### Editing Inputs
 
-- Editing inputs.conf only applies changes to new data, it does not change the
-  data
+- Editing inputs.conf only applies changes to new data, it does not change the data
 
 - Splunk monitor (file or directory) inputs are tracked by the fishbucket
   - Ensures that data is not missed or duplicated
@@ -1178,17 +1163,14 @@ Uses deployment server to distribute the inputs.conf
 
 #### The Fishbucket and btprobe Command
 
-To reset the checkpoint for an individual input, use the btprobe
-command:
+To reset the checkpoint for an individual input, use the btprobe command:
 
-splunk cmd btprobe -d SPLUNK_HOME/var/lib/splunk/ fishbucket/splunk_private_db
---file <source> --reset
+> splunk cmd btprobe -d SPLUNK_HOME/var/lib/splunk/ fishbucket/splunk_private_db --file <source> --reset
 
 Requires stopping the forwarder or indexer
 
-It is possible to clear all checkpoints, but this is
-only recommended for test environments:
-- splunk clean eventdata \_thefishbucket
+It is possible to clear all checkpoints, but this is only recommended for test environments:
+> splunk clean eventdata \_thefishbucket
 
 ### 13.0 Network and Scripted Inputs
 
@@ -1211,39 +1193,37 @@ Network Input: Host Field
 
 - The connection_host attribute defines how the host field is set:
   - dns (UI default)
-    The host is set to a DNS name using reverse IP lookup
+    - The host is set to a DNS name using reverse IP lookup
   - ip
-    The host is set to the originating host's IP address
+    - The host is set to the originating host's IP address
   - none (Custom)
-    Explicitly set the host value
+    - Explicitly set the host value
 
 Network Input: acceptFrom
 
-- acceptFrom = <network_acl>
+- acceptFrom = \<network\_acl\>
   - List address rules separated by commas or spaces
-    A single IPv4 or IPv6 address
-    A CIDR block of addresses
-    A DNS name
-    A wildcard ‘*’ and ‘!’
+    - A single IPv4 or IPv6 address
+    - A CIDR block of addresses
+    - A DNS name
+    - A wildcard ‘\*’ and ‘!’
 
 Network Input: Memory Queues
 
+inputs.conf
 ```
 [tcp://9001]
 queueSize=10MB
 ```
 
 - This is a memory-resident queue that can buffer data before forwarding
-
-- Defaults to 500KB
-
-- Useful if the indexer cannot always receive the data as fast as the forwarder
-  is acquiring it
-
+- Defaults to **500KB**
+- Useful if the indexer cannot always receive the data as fast as the forwarder is acquiring it
 - Independent of the forwarder's maxQueueSize attribute defined in outputs.conf
 
 Network Input: Persistent Queues
 
+inputs.conf
 ```
 [tcp://9001]
 queueSize=10MB
@@ -1253,11 +1233,8 @@ persistentQueueSize=5GB
 - Provides file-system buffering of data
 - Adds additional buffer space after memory buffer
 - You must set a queueSize first
-- A persistent queue is written to disk on the forwarder in
-  SPLUNK_HOME/var/run/splunk/...
-
-- Useful for high-volume data that must be preserved in situations where it
-  cannot be forwarded, such as if the network is unavailable, etc.
+- A persistent queue is written to disk on the forwarder in SPLUNK_HOME/var/run/splunk/...
+- Useful for high-volume data that must be preserved in situations where it cannot be forwarded, such as if the network is unavailable, etc.
 
 #### Scripted Inputs
 
@@ -1269,13 +1246,11 @@ persistentQueueSize=5GB
 #### Scripted Input Stanza
 
 Splunk only executes scripts from
+1. SPLUNK\_HOME/etc/apps/<app_name>/bin,
+2. SPLUNK\_HOME/bin/scripts, OR
+3. SPLUNK\_HOME/etc/system/bin
 
-SPLUNK\_HOME/etc/apps/<app_name>/bin,
-
-SPLUNK\_HOME/bin/scripts, OR
-
-SPLUNK\_HOME/etc/system/bin
-
+inputs.conf
 ```
 [script://<cmd>]
 passAuth = <username>
@@ -1285,8 +1260,10 @@ sourcetype = <defaults to script name>
 interval = <number in seconds or cron syntax>
 ```
 
-To test the script from the Splunk perspective, run splunk cmd scriptname
+To test the script from the Splunk perspective, run
+> splunk cmd scriptname
 
+inputs.conf
 ```
 [script://./bin/myvmstat.sh]
 disabled = false
@@ -1295,9 +1272,7 @@ source = vmstat
 sourcetype = myvmstat
 ```
 
-- You can declare the same queueSize and persistentQueueSize attributes for a
-  script stanza as for network (TCP and UDP) inputs
-
+- You can declare the same queueSize and persistentQueueSize attributes for a script stanza as for network (TCP and UDP) inputs
 - Buffers data on the forwarder when the network or indexer is not available
 
 ### 14.0 Agentless Inputs
@@ -1330,6 +1305,7 @@ sourcetype = myvmstat
 
 #### Local Windows Inputs Syntax
 
+inputs.conf
 ```
 [admon://name]
 [perfmon://name]
@@ -1340,6 +1316,7 @@ sourcetype = myvmstat
 [WinRegMon://name]
 ```
 
+inputs.conf
 ```
 [WinEventLog://Security]
 checkpointInterval = 5
@@ -1348,9 +1325,9 @@ disabled = 0
 start_from = oldest
 ```
 
-Can configure up to 10 whitelist and 10 blacklist per stanza
-Blacklist overrides whitelist if conflicts occur
+Can configure up to 10 whitelist and 10 blacklist per stanza. Blacklist overrides whitelist if conflicts occur.
 
+inputs.conf
 ```
 [WinEventLog://Security]
 disabled=0
@@ -1372,6 +1349,7 @@ blacklist = 540
 
 ##### WMI Inputs
 
+inputs.conf
 ```
 [WMI:remote-logs]
 interval = 5
@@ -1452,7 +1430,6 @@ acceptFrom = "!45.42.151/24, !57.73.224/19,
 - Source
 - Index
 
-
 *Parsing phase* 
 
 - Line breaking (event boundary)
@@ -1463,14 +1440,11 @@ acceptFrom = "!45.42.151/24, !57.73.224/19,
 
 #### The props.conf File
 
-props.conf is a config file that is referenced during all phases of Splunk data
-processing
+props.conf is a config file that is referenced during all phases of Splunk data processing. Inputs, indexing, parsing and searching.
 
->Inputs, indexing, parsing and searching
+All data modifications in props.conf are based on either source, sourcetype, or host
 
-All data modifications in props.conf are based on either source,
-sourcetype, or host
-
+props.conf
 ```
 [source::source_name]
 attribute = value
@@ -1500,8 +1474,9 @@ Configure props.conf on your forwarders if you have input phase settings
 
 During the input phase, Splunk sets all input data to *UTF-8* encoding by default
 
-- This can be overridden, if needed, by setting the CHARSET attribute
+- This can be overridden, if needed, by setting the *CHARSET* attribute
 
+props.conf
 ```
 [source::/var/log/locale/korea/\*]
 CHARSET=EUC-KR
@@ -1522,27 +1497,21 @@ CHARSET=AUTO
 
 As data arrives at the indexer, it goes through the parsing phase
 
-- The data is broken up into discrete *events*, each with a *timestamp* and a *time
-  zone*
+- The data is broken up into discrete *events*, each with a *timestamp* and a *time zone*
 
-The parsing phase is all about creating, modifying, and redirecting events
-Apply additional transformation steps to modify the metadata fields or modify
-raw data
+The parsing phase is all about creating, modifying, and redirecting events Apply additional transformation steps to modify the metadata fields or modify raw data
 
-- Both indexers and heavy forwarders parse events
-  In this module, we assume parsing is happening on an indexer
+- Both indexers and heavy forwarders parse events. In this module, we assume parsing is happening on an indexer.
 
 #### Event Boundaries
 
 Splunk parsing phase determines where one event ends and the next one begins
 
-- Automatically handles line breaking for common source types – even multi-line
-  events
+- Automatically handles line breaking for common source types – even multi-line events
 
 #### Handling Single Line Events
 
-Splunk handles single line event sourcetypes with automatic line
-breaking
+Splunk handles single line event sourcetypes with automatic line breaking
 
 It is more efficient to explicitly set:
 - *SHOULD_LINEMERGE = false*
@@ -1551,15 +1520,13 @@ It is more efficient to explicitly set:
 #### Configuring Line Breaking
 
 Splunk determines event boundaries in two steps:
-- Line breaking: LINE_BREAKER = <regular_expression>
+- Line breaking: LINE\_BREAKER = \<regular\_expression\>
   - Splits the incoming stream of bytes into separate lines
-  - The default value is ([\r\n]+) which is any sequence of new lines and
-    carriage returns
+  - The default value is **([\r\n]+)** which is any sequence of new lines and carriage returns
   - Correct use of regular expression can produce results in first step
 
-- Line merging: SHOULD_LINEMERGE = true
-  - When set to true (the default) it uses all other line merging settings
-    (such as BREAK_ONLY_BEFORE, BREAK_ONLY_BEFORE_DATE, MUST_BREAK_AFTER)
+- Line merging: SHOULD\_LINEMERGE = true
+  - When set to true (the default) it uses all other line merging settings (such as BREAK\_ONLY\_BEFORE, BREAK\_ONLY\_BEFORE\_DATE, MUST\_BREAK\_AFTER)
   - When set to false, the line merging step does not run
 
 #### Date/timestamp Extraction
@@ -1568,9 +1535,7 @@ Splunk determines event boundaries in two steps:
 - Always verify timestamps when setting up new data types
   - Pay close attention to timestamps during testing/staging of new data
   - Check UNIX time or other non-human readable timestamps
-
 - Splunk works well with standard date/time format and well-known data types
-
 - Custom timestamp extraction is specified in props.conf
 
 #### TIME_PREFIX
@@ -1598,10 +1563,8 @@ TIME_FORMAT = <strptime-style format>
 - Use time zone offsets to ensure correct event time
 - Splunk applies time zones in this order:
 
-1. A time zone indicator in the raw event data
-    -0800, GMT+8 or PST
-2. The value of a TZ attribute set in props.conf
-   Checks the host, source, or sourcetype stanzas
+1. A time zone indicator in the raw event data (e.g. -0800, GMT+8 or PST)
+2. The value of a TZ attribute set in props.conf (Checks the host, source, or sourcetype stanzas)
 3. If a forwarder is used, the forwarder-provided time zone is used
 4. If all else fails, Splunk applies the time zone of the indexer's host server
 
@@ -1621,12 +1584,9 @@ TIME_FORMAT = <strptime-style format>
 
 *Care* should be taken when modifying raw events (\_raw)
 
-Unlike all other modifications discussed, these change the raw data before it
-is indexed
+Unlike all other modifications discussed, these change the raw data before it is indexed
 
-- Indexed data will not be identical to the original data source
-
-
+**Indexed data will not be identical to the original data source**
 
 #### Splunk Transformation Methods
 
@@ -1643,6 +1603,7 @@ is indexed
 
 #### SEDCMD
 
+props.conf
 ```
 [source::.../vendor_sales.log]
 SEDCMD-1acct = s/AcctID=\d{5}(\d{5})/AcctID=xxxxx\1/g
@@ -1658,11 +1619,9 @@ http://docs.splunk.com/Documentation/Splunk/latest/Data/Anonymizedata
 
 - Transformation is based on the following attributes:
 
-- SOURCE_KEY indicates which data stream to use as the source for pattern
-  matching (default: \_raw)
+- SOURCE_KEY indicates which data stream to use as the source for pattern matching (default: \_raw)
 
-- REGEX identifies the events from the SOURCE_KEY that will be processed
-  (required)
+- REGEX identifies the events from the SOURCE_KEY that will be processed (required)
   - Optionally specifies regex capture groups
 - DEST_KEY indicates where to write the processed data (required)
 - FORMAT controls how REGEX writes the DEST_KEY (required)
@@ -1699,14 +1658,11 @@ FORMAT = $1xxxxxxxxxxxx$2
 ```
 When SOURCE_KEY is omitted, \_raw is used.
 
-This REGEX pattern finds two capture groups
-and rewrites the raw data feed with a new
-format.
+This REGEX pattern finds two capture groups and rewrites the raw data feed with a new format.
 
 #### Setting Per-Event Source Type
 
-Should be your last option because it is more efficient to set the
-sourcetype during the inputs phase
+Should be your last option because it is more efficient to set the sourcetype during the inputs phase
 
 props.conf
 ```
@@ -1742,8 +1698,7 @@ FORMAT = host::$1
 
 #### Per-Event Index Routing
 
-Again, if at all possible, specify the index for your inputs during the
-input phase (inputs.conf)
+Again, if at all possible, specify the index for your inputs during the input phase (inputs.conf)
 
 props.conf
 ```
@@ -1761,8 +1716,7 @@ FORMAT = itops
 
 #### Filtering Unwanted Events
 
-You can route specific unwanted events to the null queue
-Events discarded at this point do NOT count against your daily license
+You can route specific unwanted events to the null queue. Events discarded at this point do NOT count against your daily license.
 
 props.conf
 ```
@@ -1780,15 +1734,13 @@ FORMAT = nullQueue
 
 #### Routing Events to Groups using HF
 
-....
-
+*hm ...?*
 
 #### Persisted to Disk
 
 - All modifications and extractions are written to disk along with \_raw and
   metadata
   - source, sourcetype, host, timestamp, punct, etc.
-
 - Indexed data cannot be changed
   - Changes to props.conf or transforms.conf only apply to new data
   - Indexed data cannot be changed without re-indexing
