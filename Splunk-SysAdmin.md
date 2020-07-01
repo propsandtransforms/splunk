@@ -109,10 +109,11 @@ Universal Forwarder includes
 
 Run as root:
 > ./splunk enable boot-start (init.d)
+>
 > ./splunk enable boot-start -systemd-managed 1 (systemd)
 
 Run as root:
-./splunk enable boot-start –user bob
+> ./splunk enable boot-start –user bob
 
 On Windows, the installer configures Splunk software to start at machine
 startup
@@ -122,6 +123,7 @@ startup
 - Can be disabled if needed
 
 #### Time Synchronization
+
 - Best practice: Use a time synchronization service such as NTP
 - Splunk searches depend on accurate time
 - Correct event timestamping is essential
@@ -143,37 +145,37 @@ startup
 
 #### Linux Setting Recommendations
 
-* Increase ulimit settings
-* The following OS parameters need to be increased to allow for a large number  of buckets/forwarders/users (https://docs.splunk.com/Documentation/Splunk/latest/Troubleshooting/ulimitErrors)
- 	* core file size (ulimit -c 1073741824 (1 GB))
- 	* open files (ulimit -n 48 x default (48 x 1024 = 49,152) (65536))
- 	* max user processes (ulimit -u 12 x default (12 x 1024 = 12,288) (258048))
+- Increase ulimit settings
+- The following OS parameters need to be increased to allow for a large number  of buckets/forwarders/users (https://docs.splunk.com/Documentation/Splunk/latest/Troubleshooting/ulimitErrors) 
+  - core file size (ulimit -c 1073741824 (1 GB))
+  - open files (ulimit -n 48 x default (48 x 1024 = 49,152) (65536))
+  - max user processes (ulimit -u 12 x default (12 x 1024 = 12,288) (258048))
 
-* Turn Transparent Huge Pages (THP) off on Splunk Enterprise servers (https://docs.splunk.com/Documentation/Splunk/latest/ReleaseNotes/SplunkandTHP)
+- Turn Transparent Huge Pages (THP) off on Splunk Enterprise servers (https://docs.splunk.com/Documentation/Splunk/latest/ReleaseNotes/SplunkandTHP)
 
 #### Reference Servers Hardware
 
-* Hardware requirements and sizing are discussed in detail in Architecting and Deploying Splunk class (https://docs.splunk.com/Documentation/Splunk/latest/Capacity/Referencehardware)
+- Hardware requirements and sizing are discussed in detail in Architecting and Deploying Splunk class (https://docs.splunk.com/Documentation/Splunk/latest/Capacity/Referencehardware)
 
 #### splunkd
 
-* Runs on port 8089 (default) using SSL
-* Spawns and controls Splunk child processes (helpers)
-	* Splunk Web proxy, KV store, and Introspection services
-	* Each search, scripted input, or scripted alert
-* Accesses, processes, and indexes incoming data
-* Handles all search requests and returns results
+- Runs on port **8089** (default) using SSL
+- Spawns and controls Splunk child processes (helpers)
+	- Splunk Web proxy, KV store, and Introspection services
+	- Each search, scripted input, or scripted alert
+- Accesses, processes, and indexes incoming data
+- Handles all search requests and returns results
 
 #### Splunk Web
  
-* Splunk Web is browser-based user interface
-* Provides both a search and management front end for splunkd process
-* Runs on port 8000 by default
+- Splunk Web is browser-based user interface
+- Provides both a search and management front end for splunkd process
+- Runs on port **8000** by default
 
 #### The Splunk Command Line Interface (CLI)
 
-* splunk is an executable command in the bin directory
-* Same syntax is used on all supported platforms
+- splunk is an executable command in the bin directory
+- Same syntax is used on all supported platforms
 
 | Command | Operation |
 | -------------- | --------------- |
