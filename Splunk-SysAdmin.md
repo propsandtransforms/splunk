@@ -591,7 +591,7 @@ In larger or production environments, forwarders can be managed remotely
 #### Defining Target Indexers on the Forwarder
 
 - Execute on the forwarder for each destination indexer:
-> splunk add forward-server indexer:receiving-port
+> splunk add forward-server indexer:receiving-port  
 > example, splunk add forward-server 10.1.2.3:9997
 
 configures the outputs.conf as:
@@ -606,7 +606,7 @@ server = 10.1.2.3:9997
 
 #### Add UF Input by CLI
 
-> ./splunk add monitor /var/log/
+> ./splunk add monitor /var/log/  
 > ./splunk add monitor -source c:\Windows\windowsupdate.log -index newindex
 
 ### 8\.0 Distributed Search
@@ -642,7 +642,7 @@ server = 10.1.2.3:9997
 - Knowledge bundles are distributed to search peers by the search head when a distributed search is initiated
 - They contain the knowledge objects required by the indexers for searching
 - Knowledge bundles’ locations:
-> $SPLUNK\_HOME/var/run (on the search head)
+> $SPLUNK\_HOME/var/run (on the search head)  
 > $SPLUNK\_HOME/var/run/searchpeers (on the search peer)
 
 - Replication status of knowledge bundles can be viewed from Replication Status column of the Splunk Web home page *Settings > Distributed search > Search peers*
