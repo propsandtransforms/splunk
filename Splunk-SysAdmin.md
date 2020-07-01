@@ -23,7 +23,7 @@ The following content areas are general guidelines for the content to be include
 The following topics are general guidelines for the content likely to be included on the exam; however, other related topics may also appear on any specific delivery of the exam. In order to better reflect the contents of the exam and for clarity purposes, the guidelines below may change at any time without notice.
 
 ## System Administrator Course
-The Splunk System Administrator is primarily **responsible** for system management efforts which include:
+The Splunk System Administrator is primarily **responsible for system management** efforts which include:
 
 - Install, configure, and manage Splunk components 
 - Install and manage Splunk apps 
@@ -104,12 +104,12 @@ Universal Forwarder includes
 - Deployment Client
 
 #### Installation
-- Splunk starts automatically on Windows
-- Splunk must be manually started on \*NIX until boot-start is enabled
+- Splunk starts **automatically** on Windows
+- Splunk must be **manually** started on \*NIX until boot-start is enabled
 
 Run as root:
-./splunk enable boot-start (init.d)
-./splunk enable boot-start -systemd-managed 1 (systemd)
+> ./splunk enable boot-start (init.d)
+> ./splunk enable boot-start -systemd-managed 1 (systemd)
 
 Run as root:
 ./splunk enable boot-start –user bob
