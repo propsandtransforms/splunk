@@ -1292,7 +1292,6 @@ only recommended for test environments:
 ```
 
 inputs.conf
-
 ```
 udp://[host:]port]
 connection_host = dns
@@ -1322,8 +1321,10 @@ Network Input: acceptFrom
 
 Network Input: Memory Queues
 
+```
 [tcp://9001]
 queueSize=10MB
+```
 
 - This is a memory-resident queue that can buffer data before forwarding
 
@@ -1336,9 +1337,11 @@ queueSize=10MB
 
 Network Input: Persistent Queues
 
+```
 [tcp://9001]
 queueSize=10MB
 persistentQueueSize=5GB
+```
 
 - Provides file-system buffering of data
 - Adds additional buffer space after memory buffer
@@ -1398,10 +1401,10 @@ sourcetype = myvmstat
 ```
 #### Windows-Specific Inputs
 
-• Windows OS maintains much of its state data (logs, etc.) in binary format
+- Windows OS maintains much of its state data (logs, etc.) in binary format
   - Windows provides APIs that enable programmatic access to this information
 
-• Splunk provides special input types to access this data
+- Splunk provides special input types to access this data
   - All other input types are also supported
   - Data can be forwarded to any Splunk indexer on any OS platform
   - Windows Universal Forwarder can run as domain user without the local administrator privilege
@@ -1444,25 +1447,25 @@ Blacklist overrides whitelist if conflicts occur
 ```
 [WinEventLog://Security]
 disabled=0
-whitelist1= EventCode=/^[4|5].*$/ Type=/Error|Warning/
-whitelist2= TaskCategory=%^Log.*$%
+whitelist1= EventCode=/^[4|5].\*$/ Type=/Error|Warning/
+whitelist2= TaskCategory=%^Log.\*$%
 blacklist = 540
 ```
 
 #### Local vs. Remote Windows (WMI) Inputs
 
-• You can configure remote inputs (WMI) for two types of Windows
-inputs:
-– Event logs
-– Performance monitor
+- You can configure remote inputs (WMI) for two types of Windows inputs:
+  - Event logs
+  - Performance monitor
 
-• Disadvantage:
-– Uses WMI as a transport protocol
-– Not recommended in high latency networks
-– Requires Splunk to run as a domain account
+- Disadvantage:
+- Uses WMI as a transport protocol
+- Not recommended in high latency networks
+- Requires Splunk to run as a domain account
 
 ##### WMI Inputs
 
+```
 [WMI:remote-logs]
 interval = 5
 server = server1, server2, server3
@@ -1472,6 +1475,7 @@ event\_log\_file = Application, Security, System
 interval = 5
 server = server1,server2, server3
 wql = Select DatagramsPersec
+```
 
 #### Powershell Input
 
@@ -1484,23 +1488,24 @@ script = <command>
 schedule =
 [<number>|<cron>]
 ```
+
 #### HTTP Event Collector Options
 
-• Enable HEC acknowledgments
-• Send raw payloads
-• Configure dedicated HTTP settings
+- Enable HEC acknowledgments
+- Send raw payloads
+- Configure dedicated HTTP settings
 
-##### HEC Indexer Acknowledgement
+#### HEC Indexer Acknowledgement
 
-1.  A request is sent from a client to the HEC endpoint using a token with indexer acknowledgment enabled
+1. A request is sent from a client to the HEC endpoint using a token with indexer acknowledgment enabled
 2. The server returns an acknowledgment identifier (ackID) to the client
 3. The client can then query the Splunk server with the identifier to verify whether all the events in the sent request of have been indexed
 4. The Splunk server responds with the status information of each queried request
 
 #### Sending Raw Payloads to HEC
 
-• Example: Application developers want to send data in a proprietary format
-• Solution: HEC allows any arbitrary payloads, not just JSON
+- Example: Application developers want to send data in a proprietary format
+- Solution: HEC allows any arbitrary payloads, not just JSON
 
 ```
 curl "http[s]://<splunk_server>:8088/services/collector/raw?
@@ -1511,8 +1516,8 @@ channel=<client_provided_channel>"
 
 #### Configuring Dedicated HTTP Settings
 
-• Example: Splunk admins want to limit who can access the HEC endpoints
-• Solution: Manually add the dedicated server settings in inputs.conf
+- Example: Splunk admins want to limit who can access the HEC endpoints
+- Solution: Manually add the dedicated server settings in inputs.conf
 
 inputs.conf
 ```
@@ -1531,7 +1536,71 @@ acceptFrom = "!45.42.151/24, !57.73.224/19,
            encoding
 ```
 
+#### Things to Get Right at Index Time
 
+*Input phase*
+
+- Host
+- Source type
+- Source
+- Index
+
+
+*Parsing phase* 
+
+- Line breaking (event boundary)
+- Date/timestamp extraction
+- Adjust all meta fields
+- Mask raw data
+- Eliminate events
+
+#### The props.conf File
+
+props.conf is a config file that is referenced during all phases of Splunk data
+processing
+
+>Inputs, indexing, parsing and searching
+
+All data modifications in props.conf are based on either source,
+sourcetype, or host
+
+```
+[source::source_name]
+attribute = value
+
+[host::host_name]
+attribute = value
+
+[sourcetype]
+attribute = value
+```
+
+You can use wildcards (\*) and regex in the source:: and host:: stanzas
+
+Some settings in props.conf are applied during the *input* phase:
+- Character encoding
+- Fine-tuning source types
+- A few others
+
+Some settings in props.conf are applied during the *parsing* phase:
+- Individual event breaking
+- Time extraction settings and rules
+- Event data transformation
+
+Configure props.conf on your forwarders if you have input phase settings
+
+#### Character Encoding
+
+During the input phase, Splunk sets all input data to *UTF-8* encoding by default
+
+- This can be overridden, if needed, by setting the CHARSET attribute
+
+```
+[source::/var/log/locale/korea/\*]
+CHARSET=EUC-KR
+[sendmail]
+CHARSET=AUTO
+```
 
 ### 16.0 Parsing Phase and Data
 
@@ -1541,6 +1610,93 @@ acceptFrom = "!45.42.151/24, !57.73.224/19,
    16.3    Explain how timestamps and time zones are extracted or assigned to events
    16.4    Use Data Preview to validate event creation during the parsing phase
 ```
+
+#### The Parsing Phase
+
+As data arrives at the indexer, it goes through the parsing phase
+
+- The data is broken up into discrete *events*, each with a *timestamp* and a *time
+  zone*
+
+The parsing phase is all about creating, modifying, and redirecting events
+Apply additional transformation steps to modify the metadata fields or modify
+raw data
+
+- Both indexers and heavy forwarders parse events
+  In this module, we assume parsing is happening on an indexer
+
+#### Event Boundaries
+
+Splunk parsing phase determines where one event ends and the next one begins
+
+- Automatically handles line breaking for common source types – even multi-line
+  events
+
+#### Handling Single Line Events
+
+Splunk handles single line event sourcetypes with automatic line
+breaking
+
+It is more efficient to explicitly set:
+- *SHOULD_LINEMERGE = false*
+- Default is true and assumes events can span over more than one line
+
+#### Configuring Line Breaking
+
+Splunk determines event boundaries in two steps:
+- Line breaking: LINE_BREAKER = <regular_expression>
+  - Splits the incoming stream of bytes into separate lines
+  - The default value is ([\r\n]+) which is any sequence of new lines and
+    carriage returns
+  - Correct use of regular expression can produce results in first step
+
+- Line merging: SHOULD_LINEMERGE = true
+  - When set to true (the default) it uses all other line merging settings
+    (such as BREAK_ONLY_BEFORE, BREAK_ONLY_BEFORE_DATE, MUST_BREAK_AFTER)
+  - When set to false, the line merging step does not run
+
+#### Date/timestamp Extraction
+
+- Correct date/timestamp extraction is essential
+- Always verify timestamps when setting up new data types
+  - Pay close attention to timestamps during testing/staging of new data
+  - Check UNIX time or other non-human readable timestamps
+
+- Splunk works well with standard date/time format and well-known data types
+
+- Custom timestamp extraction is specified in props.conf
+
+#### TIME_PREFIX
+
+TIME_PREFIX = <REGEX> (matches characters right BEFORE the date/timestamp)
+
+props.conf
+```
+[my_custom_source_or_sourcetype]
+TIME_PREFIX = \d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} \w+\s
+```
+#### MAX_TIMESTAMP_LOOKAHEAD
+
+MAX_TIMESTAMP_LOOKAHEAD = <integer>
+
+specifies how many characters to look beyond the start of the line
+for a timestamp
+
+#### TIME_FORMAT
+
+TIME_FORMAT = <strptime-style format>
+
+#### Setting Time Zones – Splunk’s Rules
+
+- Use time zone offsets to ensure correct event time
+- Splunk applies time zones in this order:
+
+1. A time zone indicator in the raw event data
+    -0800, GMT+8 or PST
+2. The value of a TZ attribute set in props.conf
+   Checks the host, source, or sourcetype stanzas
+3. If a forwarder is used, the forwarder-provided time zone is used
+4. If all else fails, Splunk applies the time zone of the indexer's host server
 
 ### 17.0 Manipulating Raw Data
 
@@ -1553,3 +1709,179 @@ acceptFrom = "!45.42.151/24, !57.73.224/19,
        *   Prevent unwanted events from being indexed
    17.3    Use SEDCMD to modify raw data
 ```
+
+#### Modifying the Raw Data
+
+*Care* should be taken when modifying raw events (\_raw)
+
+Unlike all other modifications discussed, these change the raw data before it
+is indexed
+
+- Indexed data will not be identical to the original data source
+
+
+
+#### Splunk Transformation Methods
+
+- When possible, define meta field values during the input phase
+  - Most efficient to use inputs.conf
+- Splunk provides two methods of raw data transformations:
+  - SEDCMD
+    - Uses only props.conf
+    - Only used to mask or truncate raw data
+- TRANSFORMS
+  - Uses props.conf and transforms.conf
+  - More flexible
+  - Transforms matching events based on source, source type, or host
+
+#### SEDCMD
+
+```
+[source::.../vendor_sales.log]
+SEDCMD-1acct = s/AcctID=\d{5}(\d{5})/AcctID=xxxxx\1/g
+```
+
+For more examples, see:
+http://docs.splunk.com/Documentation/Splunk/latest/Data/Anonymizedata
+
+#### TRANSFORMS
+
+- Per event transformation is based on REGEX pattern matches
+- Define the transformation in transforms.conf and invoke it from props.conf
+
+- Transformation is based on the following attributes:
+
+- SOURCE_KEY indicates which data stream to use as the source for pattern
+  matching (default: \_raw)
+
+- REGEX identifies the events from the SOURCE_KEY that will be processed
+  (required)
+  - Optionally specifies regex capture groups
+- DEST_KEY indicates where to write the processed data (required)
+- FORMAT controls how REGEX writes the DEST_KEY (required)
+
+props.conf
+```
+[sourcetype]
+TRANSFORMS = stanzaName
+```
+
+transforms.conf
+```
+[stanzaName]
+SOURCE_KEY = ...
+REGEX = ...
+DEST_KEY = ...
+FORMAT = ...
+```
+
+#### Masking Sensitive Data
+
+props.conf
+```
+[source::...\\store\\purchases.log]
+TRANSFORMS-1ccnum = cc_num_anon
+```
+
+transforms.conf
+```
+[cc_num_anon]
+REGEX = (.*CC_Num:\s)\d{12}(\d{4}.*)
+DEST_KEY = _raw
+FORMAT = $1xxxxxxxxxxxx$2
+```
+When SOURCE_KEY is omitted, \_raw is used.
+
+This REGEX pattern finds two capture groups
+and rewrites the raw data feed with a new
+format.
+
+#### Setting Per-Event Source Type
+
+Should be your last option because it is more efficient to set the
+sourcetype during the inputs phase
+
+props.conf
+```
+[source::udp:514]
+TRANSFORMS = custom_sourcetype
+```
+
+transforms.conf
+```
+[custom_sourcetype]
+SOURCE_KEY = \_raw
+REGEX = Custom$
+DEST_KEY = MetaData:Sourcetype
+FORMAT = sourcetype::custom_log
+```
+
+#### Setting Per-Event Host Name
+
+props.conf
+```
+[sales_entries]
+TRANSFORMS-register = sales_host
+```
+
+transforms.conf
+```
+[sales_host]
+SOURCE_KEY = \_raw
+REGEX = server:(\w+)
+DEST_KEY = MetaData:Host
+FORMAT = host::$1
+```
+
+#### Per-Event Index Routing
+
+Again, if at all possible, specify the index for your inputs during the
+input phase (inputs.conf)
+
+props.conf
+```
+[mysrctype]
+TRANSFORMS-itops = route_errs_warns
+```
+
+transforms.conf
+```
+[route_errs_warns]
+REGEX = (Error|Warning)
+DEST_KEY = _MetaData:Index
+FORMAT = itops
+```
+
+#### Filtering Unwanted Events
+
+You can route specific unwanted events to the null queue
+Events discarded at this point do NOT count against your daily license
+
+props.conf
+```
+[WinEventLog:System]
+TRANSFORMS = null_queue_filter
+```
+
+transforms.conf
+```
+[null_queue_filter]
+REGEX = (?!)^EventCode=(592|593)
+DEST_KEY = queue
+FORMAT = nullQueue
+```
+
+#### Routing Events to Groups using HF
+
+....
+
+
+#### Persisted to Disk
+
+- All modifications and extractions are written to disk along with \_raw and
+  metadata
+  - source, sourcetype, host, timestamp, punct, etc.
+
+- Indexed data cannot be changed
+  - Changes to props.conf or transforms.conf only apply to new data
+  - Indexed data cannot be changed without re-indexing
