@@ -583,20 +583,18 @@ In larger or production environments, forwarders can be managed remotely
    - Either manually or using Deployment Server
 4. Add inputs on forwarders, using one of the following:
    - Forwarder management
-   - CLI
+   - CLI:
      > splunk enable listen <port>
    - Edit inputs.conf manually
-     inputs.conf as: [splunktcp://portNumber]
+     > [splunktcp://portNumber]
 
 #### Defining Target Indexers on the Forwarder
 
 - Execute on the forwarder for each destination indexer:
-
->splunk add forward-server indexer:receiving-port
->example, splunk add forward-server 10.1.2.3:9997
+> splunk add forward-server indexer:receiving-port
+> example, splunk add forward-server 10.1.2.3:9997
 
 configures the outputs.conf as:
-
 ```
 [tcpout]
 defaultGroup = default-autolb-group
@@ -608,8 +606,8 @@ server = 10.1.2.3:9997
 
 #### Add UF Input by CLI
 
->./splunk add monitor /var/log/
->./splunk add monitor -source c:\Windows\windowsupdate.log -index newindex
+> ./splunk add monitor /var/log/
+> ./splunk add monitor -source c:\Windows\windowsupdate.log -index newindex
 
 ### 8\.0 Distributed Search
 
@@ -633,48 +631,34 @@ server = 10.1.2.3:9997
 
 - Install Splunk on each search head and peers (indexers)
 - Set up the same indexes on all peers
-- All search heads and peers should use a license master
-- Add a user to each peer with a role that has the edit_user capability
+- All search heads and peers should use a **license master**
+- Add a user to each peer with a role that has the edit\_user capability
 - Used only for authenticating a search head to the peers
-- On the search head, configure search peers by selecting:
-  Settings > Distributed search
-  - Distributed search is turned on by default, so just add search peers
+- On the search head, configure search peers by selecting: *Settings > Distributed search*
+  - Distributed search is **turned on** by default, so just add search peers
 
 #### Knowledge Bundles and Replication
 
-- Knowledge bundles are distributed to search peers by the search head when a
-  distributed search is initiated
-
+- Knowledge bundles are distributed to search peers by the search head when a distributed search is initiated
 - They contain the knowledge objects required by the indexers for searching
-
 - Knowledge bundles’ locations:
+> $SPLUNK\_HOME/var/run (on the search head)
+> $SPLUNK\_HOME/var/run/searchpeers (on the search peer)
 
->$SPLUNK_HOME/var/run on the search head
->$SPLUNK_HOME/var/run/searchpeers on the search peer
-
-- Replication status of knowledge bundles can be viewed from Replication Status
-  column of the Splunk Web home page Settings > Distributed search > Search
-  peers
+- Replication status of knowledge bundles can be viewed from Replication Status column of the Splunk Web home page *Settings > Distributed search > Search peers*
 
 #### How Many Search Heads?
 
-- One dedicated search head can handle around 8 to 12 simultaneous searches (ad
-  hoc or scheduled)
-
-  - Exact numbers depend on types of searches and the hardware of the search
-    head; especially number of CPU cores
-
+- One dedicated search head can handle around 8 to 12 simultaneous searches (ad hoc or scheduled)
+  - Exact numbers depend on types of searches and the hardware of the search head; especially number of CPU cores
 - Search heads can be added to the distributed group at any time
-
 - Search heads can be dedicated or clustered
-
 - Dedicated search heads don't share knowledge objects (separate small teams)
-
 - Search head cluster shares a common set of knowledge objects (large teams)
 
 #### Distributed Search Best Practice
 
-Forward all search head indexes to the search peer (indexer) layer
+**Forward all search head indexes** to the search peer (indexer) layer
 - Simplifies the process of managing indexes
 - Can diagnose from other search heads if one goes down
 - Allows other search heads to access all summary indexes
@@ -691,21 +675,14 @@ Forward all search head indexes to the search peer (indexer) layer
 
 #### Data Input Types
 
-- Splunk supports many types of data input
+Splunk supports many types of data input
 
-  - Files and directories: monitoring text files and/or directory structures
-    containing text files
-
-   - Network data: listening on a port for network data
-
-   - Script output: executing a script and using the output from the script as
-     the input
-
-   - Windows logs: monitoring Windows event logs, Active Directory, etc.
-   
-   - HTTP: using the HTTP Event Collector
-
-   - And more...
+**Files and directories** : monitoring text files and/or directory structures containing text files  
+**Network data** : listening on a port for network data  
+**Script output** : executing a script and using the output from the script as the input  
+**Windows logs** : monitoring Windows event logs, Active Directory, etc.  
+**HTTP** : using the HTTP Event Collector  
+And more...
 
 #### Default Metadata Settings
 
