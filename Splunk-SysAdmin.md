@@ -499,36 +499,28 @@ enableDataIntegrityControl = 0
 
 #### Last Chance Index
 
-- Gives ability to define a last chance index for events destined for non-
-  existent indexes
+- Gives ability to define a last chance index for events destined for non- existent indexes
 - If this setting is not defined or is empty, it will drop such events
 - Defaults to empty
 
-lastChanceIndex = <index name>
+> lastChanceIndex = \<index name\>
 
-#### The Fishbucket – Re-indexing Data
+#### The Fishbucket - Re-indexing Data
 
 - The fishbucket index stores the checkpoint information for monitor inputs
 - To reset the individual input checkpoint, use the btprobe command:
 
->splunk cmd btprobe –d SPLUNK_HOME/var/lib/splunk/fishbucket/splunk_private_db --file <source> --reset
+>splunk cmd btprobe –d SPLUNK\_HOME/var/lib/splunk/fishbucket/splunk\_private\_db --file \<source\> --reset
 
 #### Restoring a Frozen Bucket
 
-- To thaw a frozen bucket:
-
-- Copy the bucket directory from the frozen directory to the index's thaweddb
-  directory
-
-- Run splunk rebuild <path to thawed bucket directory>
-  (Does not count against license)
-
-- Restart Splunk
+To thaw a frozen bucket:
+1. Copy the bucket directory from the frozen directory to the index's thaweddb directory
+2. Run splunk rebuild \<path to thawed bucket directory\> (Does not count against license)
+3. Restart Splunk
 
 - Events in thaweddb are searchable along with other events
-
 - They will not be frozen, nor do they count against the index max size
-
 - Delete the thawed bucket directory when no longer needed and restart Splunk 
 
 ### 5.0 SPLUNK USER MANAGEMENT
@@ -539,7 +531,7 @@ lastChanceIndex = <index name>
    5.3     Add Splunk users
 ```
 
-hm ......?
+*hm ...?*
 
 ### 6.0 SPLUNK AUTHENTICATION MANAGEMENT
 
@@ -549,9 +541,9 @@ hm ......?
    6.3     Describe the steps to enable Multifactor Authentication in Splunk
 ```
 
-hm .....?
+*hm ..?*
 
-### 7\.0 Getting Data In
+### 7.0 Getting Data In
 
 ```
    7.1     Describe the basic settings for an input
@@ -561,49 +553,38 @@ hm .....?
 ```
 #### Forwarders and Indexers
 
-- In a production environment
-  - Splunk indexers run on dedicated servers
-  - The data you want is on remote machines
+In a production environment
+- Splunk indexers run on dedicated servers
+- The data you want is on remote machines
 
-- Install Splunk forwarders on the remote machines to
-  - Gather the data
-  - Send it across the network to the Splunk indexer(s)
+Install Splunk forwarders on the remote machines to
+- Gather the data
+- Send it across the network to the Splunk indexer(s)
 
-- Indexers listen on a receiving port for the forwarded data
-
->Forwarder index.conf -> outputs.conf --> Indexer:9997 inputs.conf
+Indexers listen on a receiving port for the forwarded data
+> Forwarder index.conf -> outputs.conf --> Indexer:9997 inputs.conf
 
 #### Deployment Server/Forwarder Management
 
-- In larger or production environments, forwarders can be managed remotely
+In larger or production environments, forwarders can be managed remotely
 
 - Splunk Deployment Server provides a Forwarder Management interface
-
   - A centralized configuration management tool to manage forwarder configuration
-
   - Allows forwarders to be managed in groups (server classes)
-
 - In this class, we will set up a single forwarder manually for testing
-
-- Deployment server is discussed in detail in the Splunk Enterprise Data
-  Administration class
-
+- Deployment server is discussed in detail in the Splunk Enterprise Data Administration class
 
 #### Forwarder Configuration Steps
 
 1. Set up a receiving port on each indexer
    - It is only necessary to do this once
-
 2. Download and install Universal Forwarder
-
 3. Set up forwarding on each forwarder
    - Either manually or using Deployment Server
-
 4. Add inputs on forwarders, using one of the following:
    - Forwarder management
    - CLI
-     splunk enable listen <port>
-
+     > splunk enable listen <port>
    - Edit inputs.conf manually
      inputs.conf as: [splunktcp://portNumber]
 
