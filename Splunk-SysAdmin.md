@@ -378,87 +378,62 @@ There are default settings in SPLUNK\_HOME/etc/**system/default** and SPLUNK\_HO
 #### What are Indexes?
 
 - Splunk stores the input data as events in indexes
-        SPLUNK_HOME/var/lib/splunk
-- Set in Settings > Server Settings > General Settings
+  - SPLUNK\_HOME/var/lib/splunk
+- Set in *Settings > Server Settings > General Settings*
 - Can override on a per-index basis
 - Splunk ships with some indexes already installed
 
-\_internal – Splunk indexes its own logs and metrics from its processing here
-
-\_audit – Splunk stores its audit trails and other optional auditing
-information
-
-\_introspection – tracks system performance, Splunk resource usage data, and
-provides MC with performance data
-
-\_thefishbucket – contains checkpoint information for file monitoring inputs
-
-summary – default index for summary indexing system
-
-main – default index for inputs, located in the defaultdb directory
+\_**internal** : Splunk indexes its own logs and metrics from its processing here
+\_**audit** : Splunk stores its audit trails and other optional auditing information
+\_**introspection** : tracks system performance, Splunk resource usage data, and provides MC with performance data
+\_**thefishbucket** : contains checkpoint information for file monitoring inputs
+**summary** : default index for summary indexing system
+**main** : default index for inputs, located in the defaultdb directory
 
 #### Why create Indexes?
 
-- Access control
-- Retention
+1. Access control
+2. Retention
 
 #### Buckets
 
 - An index stores events in buckets
-- A bucket is a directory containing a set of raw data and associated index
-  files
+- A bucket is a directory containing a set of raw data and associated index files
 - Buckets have a maximum data size and a time span
 
-db          = Hot & warm buckets
+**db** = Hot & warm buckets
 
->Hot buckets are the newest buckets open for writes (readable). Events stream to
-hot buckets split by time.
->Transition to warm (read-only) when size or time limits are hit.
+Hot buckets are the newest buckets open for writes (readable). Events stream to hot buckets split by time. Transition to warm (read-only) when size or time limits are hit.
 
-colddb      = Cold buckets
+**colddb** = Cold buckets
 
->Cold buckets contain the oldest data still in the index (read-only) and can
-reside on separate partition.
->Delete is the default action after buckets roll from cold.
+Cold buckets contain the oldest data still in the index (read-only) and can reside on separate partition. Delete is the default action after buckets roll from cold.
 
-thaweddb    = Buckets restored from archive
+**thaweddb** = Buckets restored from archive
 
->One can optionally archive (frozen) buckets in 3rd party store. If a frozen
-path is defined the data is archived (not searchable.)
->Delete is the default action after buckets roll from cold.
->Older buckets that have been archived can be loaded into thawed area and
-searched.
+One can optionally archive (frozen) buckets in 3rd party store. If a frozen path is defined the data is archived (not searchable.) Delete is the default action after buckets roll from cold.  Older buckets that have been archived can be loaded into thawed area and searched.
 
 #### Hot Buckets
 
-- After data is read and parsed, it goes through the license meter and the
-  resulting event is written into a hot bucket
-
-- When hot buckets reach their max size or time span, they are closed and
-  converted to warm status
-
-- Hot buckets also roll to warm automatically when the indexer is restarted
-
+- After data is read and parsed, it goes through the *license meter* and the resulting event is written into a *hot bucket*
+- When hot buckets reach their *max size or time span*, they are closed and converted to *warm* status
+- Hot buckets also *roll to warm* automatically when the indexer is *restarted*
 - Hot and warm buckets are stored in the db directory for the index
-
 - Hot buckets are renamed when rolled to warm
 
-*hot_v1_0*
-*hot_v1_1*
+Hot bucket names:  
+> hot\_v1\_0*  
+> hot_v1_1*
 
 #### Warm and Cold Bucket Names
 
-- Warm bucket names identify the time range of the events contained in that
-  bucket
+- Warm bucket names identify the time range of the events contained in that bucket
+- When a warm bucket rolls to cold, the entire bucket is moved, maintaining its name
+- At search time, Splunk scans the time range on a bucket name to determine whether or not to open the bucket and search its events
 
-- When a warm bucket rolls to cold, the entire bucket is moved, maintaining its
-  name
-
-- At search time, Splunk scans the time range on a bucket name to determine
-  whether or not to open the bucket and search its events
-
-db_1389230491_1389230488_5
-db_<youngest_event_in_bucket>\_<oldest_event_in_bucket>\_<unique_id>
+Warm bucket names:  
+> db\_1389230491\_1389230488\_5  
+> db_<youngest_event_in_bucket>\_<oldest_event_in_bucket>\_<unique_id>
 
 #### Freezing: Data Expiration
 
