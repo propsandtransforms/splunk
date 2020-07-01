@@ -441,11 +441,11 @@ Warm bucket names:
   - The index's maximum size is reached
   - The bucket's age exceeds the retention time limit
     - All the events in the bucket have expired
-- Splunk will never exceed the maximum overall size of an index
+- Splunk will *never* exceed the maximum overall size of an index
   - Buckets may be deleted even if they have not reached the time limit
 - You can optionally configure the frozen path
   - Splunk moves the bucket's raw data to this location before deletion
-  - Frozen buckets are not searchable
+  - Frozen buckets are *not searchable*
 - Frozen data can be brought back (thawed) into Splunk if needed
 
 #### Calculating Index Storage
@@ -457,13 +457,12 @@ Allocate disk space to meet data retention needs
 
 #### Adding an Index
 
-CLI: splunk add index <index_name>
+CLI: 
+> splunk add index \<index\_name\>
 
 #### Index Data Integrity Check
 
-- Provides an ability to validate that data has not been tampered with after
-  indexing (https:docs.splunk.com/Documentation/Splunk/latest/Security/Dataintegritycontrol)
-
+- Provides an ability to validate that data has not been tampered with after indexing (https:docs.splunk.com/Documentation/Splunk/latest/Security/Dataintegritycontrol)
 - When enabled, produces calculated hash files for auditing and legal purposes
 
 Works on index level (including clustering)
@@ -471,14 +470,15 @@ Works on index level (including clustering)
 - To prevent data loss, use the indexer acknowledgment capability (useACK)
 
 - To verify the integrity of an index/bucket:
-  splunk check-integrity -bucketPath [bucket_path] [verbose]
-  splunk check-integrity -index [index] [verbose]
+> splunk check-integrity -bucketPath [bucket\_path] [verbose]  
+> splunk check-integrity -index [index] [verbose]
 
 - To re-generate hash files:
-  splunk generate-hash-files [-bucketPath|-index]
+> splunk generate-hash-files [-bucketPath|-index]
 
 #### indexes.conf
 
+```
 [securityops]
 homePath = /mnt/ssd/splunk/itops/db
 coldPath = /mnt/san/splunk/itops/colddb
@@ -486,6 +486,7 @@ thawedPath = $SPLUNK_DB/itops/thaweddb
 maxDataSize = auto_high_volume
 maxTotalDataSizeMB = 307200
 enableDataIntegrityControl = 0
+```
 
 #### Strict Time-based Retention Policies
 
@@ -493,9 +494,8 @@ enableDataIntegrityControl = 0
   - Splunk freezes entire buckets, not individual events
   - If a bucket spans more than one day, you can't meet the 90 day requirement
 - Configuration option:
-
-- frozenTimePeriodInSecs = 7776000 (90 days)
-- maxHotSpanSecs = 86400 (24 hours)
+  - frozenTimePeriodInSecs = 7776000 (90 days)
+  - maxHotSpanSecs = 86400 (24 hours)
 
 #### Last Chance Index
 
