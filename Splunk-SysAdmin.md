@@ -180,7 +180,7 @@ startup
 | Command | Operation |
 | -------------- | --------------- |
 | splunk help | Display a usage summary |
-| splunk help <object> | Display the details of a specific object |
+| splunk help \<object\> | Display the details of a specific object |
 | splunk [start \| stop \| restart] | Manages the Splunk processes |
 | splunk start –-accept-license | Automatically accept the license without prompt |
 | splunk status | Display the Splunk process status |
@@ -191,16 +191,16 @@ startup
 
 #### Enabling MC in Standalone Mode
 
-* MC runs un-configured in standalone mode by default
-* To enable, click *Settings > General Setup > Apply Changes*
-* You must Apply Changes to initialize the MC and after any change
+- MC runs un-configured in standalone mode by default
+- To enable, click *Settings > General Setup > Apply Changes*
+- You must Apply Changes to initialize the MC and after any change
 
 #### Enabling MC Platform Alerts
 
-* Effective operation of your Splunk environment is timely identification and notification of critical conditions
-* Any item over 80% mark can’t be good
-* MC Alerts Setup provides a number of preconfigured platform alerts Platform alerts are disabled by default
-* Tweak parameters such as alert schedule, suppression time, and alert actions
+- Effective operation of your Splunk environment is timely identification and notification of critical conditions
+- Any item over 80% mark can’t be good
+- MC Alerts Setup provides a number of preconfigured platform alerts Platform alerts are disabled by default
+- Tweak parameters such as alert schedule, suppression time, and alert actions
 
 ### Splunk Deployment - Distibuted
 
@@ -212,41 +212,40 @@ startup
 ```
 
 #### Splunk License Types
-- Enterprise Trial License
+
+- **Enterprise Trial License**
   - Downloads with product
-  - Same as full Enterprise license except for 500MB/d limit
-  - Valid 60 days
+  - Same as full Enterprise license except for **500MB/d** limit
+  - Valid **60 days**
   - Sales trial license is a trial Enterprise license of varying size and duration
 
-- Enterprise license
+- **Enterprise license**
   - Purchased from Splunk
   - Full functionality
   - Daily indexing volume limit
   - No-enforcement license
 
-- Free license
+- **Free license**
   - Disables alerts, authentication, clustering, distributed search,
     summarization, and forwarding to non-Splunk servers 
-  - Allows 500 MB/day of indexing and forwarding to other Splunk instances
+  - Allows **500 MB/day** of indexing and forwarding to other Splunk instances
 
-- Forwarder license
+- **Forwarder license**
   - Sets the server up as a heavy forwarder
   - Applies to non-indexing forwarders
   - Allows authentication, but no indexing
 
 #### License Warnings and Violations
 
-- If the indexing exceeds the allocated daily quota in a pool, an alert is
-  raised in Messages (pool warning) on any page in Splunk Web
+- If the indexing exceeds the allocated daily quota in a pool, an alert is raised in Messages (pool warning) on any page in Splunk Web
 - The daily license quota resets at midnight
-- 5 or more warnings on an enforced Enterprise license or 3 warnings on a Free
-  license, in a rolling 30-day period, is a violation
+- **5 or more** warnings on an enforced Enterprise license or **3 warnings** on a Free license, in a **rolling 30-day period**, is a violation
 
 #### What counts as daily license quota?
 
 - All data from all sources that is indexed
-  - It is the data (full size) that flows through the parsing pipeline, per day
-  - It is not the amount of storage used by the indexes
+  - It is the data (full size) that **flows through the parsing pipeline**, per day
+  - It is **not** the amount of **storage** used by the indexes
 
 - What does not count against your license daily quota?
   - Replicated data (Index Clusters)
@@ -254,7 +253,7 @@ startup
   - Splunk internal logs (\_internal, \_audit, etc. indexes)
   - Structural components of an index (metadata, tsidx, etc.)
 
-- Metrics data counts against a license at a fixed 150 bytes per metric event
+- **Metrics data** counts against a license at a **fixed 150 bytes** per metric event
   - Draws from the same license quota as event data
 
 ### 3.0 SPLUNK CONFIGURATION FILES
@@ -267,8 +266,9 @@ startup
 ```
 
 #### Splunk Configuration Files
+
 - All .conf files have documentation and examples:
-  - SPLUNK_HOME/etc/system/README
+  - SPLUNK\_HOME/etc/system/README
   - \*.conf.spec
   - \*.conf.example
   - Splunk documentation: docs.splunk.com
@@ -282,11 +282,12 @@ startup
 | Search Head | Defines what data to collect including Splunk logs | Field Extractions (search time), Lookups, etc | Defines where to forward the data. You may want to send the data to the Indexer especially the internal logs |
 
 ### Default vs. Local Configuration
+
 - Splunk ships with default .conf files
   - Stored in the default directories
-- Only modify configuration files in a local directory
-- Avoid storing configurations in SPLUNK_HOME/etc/system
-  - Manage your configs in the appropriate app under etc/apps/<appname>/local
+- Only modify configuration files in a *local* directory
+- Avoid storing configurations in SPLUNK\_HOME/etc/system
+  - Manage your configs in the appropriate app under etc/apps/\<appname\>/local
 - If you don't have an app you need to create one
 
 #### Index Time vs. Search Time
@@ -305,17 +306,14 @@ For example:
 
 #### Index Time Merging of Configurations
 
-- When Splunk starts, configuration files are merged together into a single run
-  time model for each file type
-  - Regardless of the number of inputs.conf files in various apps or the system
-    path, only one master inputs configuration model exists in memory at
-    runtime
-- If there are no duplicate stanzas or common settings between the files, the
-  result is the union of all files
+- When Splunk starts, configuration files are merged together into a single run time model for each file type
+  - Regardless of the number of inputs.conf files in various apps or the system path, only one master inputs configuration model exists in memory at runtime
+- If there are no duplicate stanzas or common settings between the files, the result is the union of all files
 - If there are conflicts, the setting with the highest precedence is used
-  - Remember that local always takes precedence over default
+  - Remember that **local always takes precedence** over default
 
 #### Index Time Precedence Order
+
 1. etc/system/local
 2. etc/apps/search/local
 3. etc/apps/unix/local
@@ -323,12 +321,13 @@ For example:
 5. etc/apps/unix/default
 6. etc/system/default
 
-*If two or more apps at the same level of precedence have conflicts between
-them, the conflicts are resolved in lexicographical order by app directory
-name.*
+If two or more apps at the same level of precedence have conflicts between
+them, the conflicts are resolved in **lexicographical** order by app directory
+name.
 
 #### Search Time Precedence Order
-1. etc/users/<user>/app/local
+
+1. etc/users/\<user\>/app/local
 2. etc/apps/app/local
 3. etc/apps/app/default
 4. etc/system/local
@@ -337,9 +336,9 @@ name.*
 #### Search Time Precedence Order (Sharing KOs)
 
 Example: If Mary shares the macro at the app level, then the definition is
-moved to the SPLUNK_HOME/etc/apps/search/local
+moved to the SPLUNK_HOME/etc/apps/**search/local** dirctory.
 
-Example: If the macro is then shared globally then the .meta file in the
+Example: If the macro is then shared globally then the **.meta** file in the
 metadata folder of the app is updated
 
 > export = system
@@ -349,21 +348,21 @@ metadata folder of the app is updated
 - splunk btool conf-name list [options]
 - Shows on-disk configuration for requested file
 - Useful for checking the configuration scope and permission rules
-- Run splunk btool check each time Splunk starts
-  Use --debug to display the exact .conf file location
-  Add --user= <user> --app=<app> to see the user/app context layering
+- Run splunk btool check each time Splunk starts  
+  Use --debug to display the exact .conf file location  
+  Add --user=\<user\> --app=\<app\> to see the user/app context layering
 
-- Examples:
+Examples:
 
-splunk help btool
-splunk btool check
-splunk btool inputs list
-splunk btool inputs list monitor:///var/log
-splunk btool inputs list monitor:///var/log --debug
+> splunk help btool
+> splunk btool check
+> splunk btool inputs list
+> splunk btool inputs list monitor:///var/log
+> splunk btool inputs list monitor:///var/log --debug
 
 #### Overriding Defaults
 
-- There are default settings in SPLUNK\_HOME/etc/system/default and SPLUNK\_HOME/etc/apps/search/default
+There are default settings in SPLUNK\_HOME/etc/**system/default** and SPLUNK\_HOME/etc/apps/**search/default**
 
 ### 4.0 SPLUNK INDEXES
 
