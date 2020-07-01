@@ -933,26 +933,23 @@ useACK = true
 ```
 #### Deployment Management
 
-- Deployment Server is a built-in tool for managing configuration of Splunk
-  instances
-  - Allows you to manage remote Splunk instances centrally
-  - Requires an Enterprise License
-  - Handles the job of sending configurations (inputs.conf, outputs.conf, etc.)
-    packaged as apps
-
+Deployment Server is a built-in tool for managing configuration of Splunk instances
+- Allows you to manage remote Splunk instances centrally
+- Requires an Enterprise License
+- Handles the job of sending configurations (inputs.conf, outputs.conf, etc.) packaged as apps
 - Can automatically restart remote Splunk instances
 
-- Forwarder management is a graphical interface on top of deployment server
+Forwarder management is a graphical interface on top of deployment server
 - Monitoring Console Forwarder dashboards help you monitor the deployment
-- Best Practice: The Deployment Server should be a dedicated Splunk instance
+
+Best Practice: The Deployment Server should be a dedicated Splunk instance
 
 #### Deployment Server Components
 
 Deployment Apps
 
-- Configuration files like inputs.conf packaged into apps to be deployed to the
-  clients
-- These apps reside in $SPLUNK_HOME/ etc/deployment- apps/
+- Configuration files like inputs.conf packaged into apps to be deployed to the clients
+- These apps reside in $SPLUNK\_HOME/ etc/deployment- apps/
 
 Server Class
 
@@ -961,8 +958,7 @@ Server Class
 
 Deployment Clients
 
-- Splunk instances (Enterprise or UF) that are connected to the DS and are
-  phoning home
+- Splunk instances (Enterprise or UF) that are connected to the DS and are phoning home
 - You establish the connection from the Deployment Client
 
 #### Ports and Configurations
@@ -970,8 +966,7 @@ Deployment Clients
 deploymentclient.conf
 - Specify the clients and apps
 
-Deployment clients obtain deployment apps (configuration bundle) from the
-Deployment Server
+Deployment clients obtain deployment apps (configuration bundle) from the Deployment Server
 
 etc/<apps>/local/serverclass.conf
 - map clients to apps
@@ -979,47 +974,48 @@ etc/<apps>/local/serverclass.conf
 etc/deployment-apps/<app>/local/(outputs.conf, inputs.conf,etc)
 - app repository location
 
-Clients to Deployment Server Connection: Managment Port 8089
+Clients to Deployment Server Connection: **Managment Port 8089**
 
-Client to Indexer Data Connection: Receiving Port (9997)
+Client to Indexer Data Connection: **Receiving Port (9997)**
 
 #### What's in a Deployment App?
 
-- Deployment Server/Forwarder Management works by deploying one or more apps
-  from the SPLUNK_HOME/etc/deployment-apps folder to the remote forwarders
-  (clients) 
-  - They are deployed to the forwarder's SPLUNK_HOME/etc/apps folder by
-  default
+Deployment Server/Forwarder Management works by deploying one or more apps from the SPLUNK\_HOME/etc/deployment-apps folder to the remote forwarders (clients) 
+- They are deployed to the forwarder's SPLUNK\_HOME/etc/apps folder by default
 
-- An app can have configuration files, scripts, and other resources
-- Apps must follow the normal app structure and rules. Required files:
+An app can have configuration files, scripts, and other resources
+- Apps must follow the normal app structure and rules.  
+  Required files:
   - app.conf (in default or local)
   - local.meta (in metadata)
 
 #### What’s a Server Class?
 
-- A server class maps a group of clients to one or more deployment apps
+A *server class* maps a group of clients to one or more deployment apps
 
-- A set of clients can be grouped based on:
-  - Client name, host name, IP address, or DNS name
-  - Machine types
+A set of clients can be grouped based on:
+- Client name
+- Host name
+- IP address
+- DNS name
+- Machine types
 
 #### Enabling Forwarder Management
 
 Overview of how to set up Forwarder Management in your implementation:
-
-1. On the deployment server, add one or more apps in SPLUNK_HOME/etc/deployment-apps
+1. On the deployment server, add one or more apps in SPLUNK\_HOME/etc/deployment-apps
 2. In the Forwarder Management UI, create one or more server classes
-3. On forwarders, run splunk set deploy-poll <deployServer:port>
+3. On forwarders, run 
+> splunk set deploy-poll <deployServer:port>
 
 #### Configuring Deployment Clients
 
-- Run this during forwarder installation or later splunk 
+Run this during forwarder installation or later splunk 
 > set deploy-poll deployServer:port
 
 Creates deploymentclient.conf in SPLUNK_HOME/etc/system/local
 
-- splunk restart
+> splunk restart
 
 deploymentclient.conf
 ```
@@ -1031,9 +1027,9 @@ clientName = webserver_1
 phoneHomeIntervalInSecs = 600
 ```
 
-- On the deployment client 
-  - Use splunk show deploy-poll to check the deployment server settings
-  - Use splunk list forward-server to check the indexer destination settings
+On the deployment client 
+- Use splunk show deploy-poll to check the deployment server settings
+- Use splunk list forward-server to check the indexer destination settings
 
 #### Usefull Commands
 
