@@ -354,11 +354,11 @@ metadata folder of the app is updated
 
 Examples:
 
-> splunk help btool
-> splunk btool check
-> splunk btool inputs list
-> splunk btool inputs list monitor:///var/log
-> splunk btool inputs list monitor:///var/log --debug
+> splunk help btool  
+> splunk btool check  
+> splunk btool inputs list  
+> splunk btool inputs list monitor:///var/log  
+> splunk btool inputs list monitor:///var/log --debug  
 
 #### Overriding Defaults
 
