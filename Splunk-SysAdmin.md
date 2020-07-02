@@ -25,12 +25,12 @@ The following topics are general guidelines for the content likely to be include
 ## System Administrator Course
 The Splunk System Administrator is primarily **responsible for system management** efforts which include:
 
-- Install, configure, and manage Splunk components 
-- Install and manage Splunk apps 
-- Manage Splunk licensing 
-- Manage Splunk indexes 
-- Manage Splunk users and authentication 
-- Manage Splunk configuration files 
+- Install, configure, and manage Splunk components
+- Install and manage Splunk apps
+- Manage Splunk licensing
+- Manage Splunk indexes
+- Manage Splunk users and authentication
+- Manage Splunk configuration files
 - Monitor MC and respond to system health alerts
 
 ### 1.0 Identify Splunk Components
@@ -43,16 +43,16 @@ Splunk scales from a single server to a **distributed infrastructure**
 - Authenticates users (RBAC)
 
 #### Single Server
-- All functions in a single instance of Splunk 
-- For testing, proof of concept, personal use, and learning 
+- All functions in a single instance of Splunk
+- For testing, proof of concept, personal use, and learning
 - This is what you get when you download Splunk and install with default settings
 
 #### Splunk Server
-- Similar to server in standalone configuration 
+- Similar to server in standalone configuration
 - Manage deployment of forwarder configurations
 
 #### Forwarders
-- Forwarders collect data and send it to Splunk servers 
+- Forwarders collect data and send it to Splunk servers
 - Install forwarders at data source (usually production servers)
 
 #### Search Heads
@@ -92,7 +92,7 @@ Run Splunk at boot
 
 #### WHAT SOFTWARE DO YOU INSTALL?
 
-Splunk Enterprise includes 
+Splunk Enterprise includes
 - Indexer
 - Search Head
 - License Master
@@ -147,7 +147,7 @@ startup
 #### Linux Setting Recommendations
 
 - Increase ulimit settings
-- The following OS parameters need to be increased to allow for a large number  of buckets/forwarders/users (https://docs.splunk.com/Documentation/Splunk/latest/Troubleshooting/ulimitErrors) 
+- The following OS parameters need to be increased to allow for a large number  of buckets/forwarders/users (https://docs.splunk.com/Documentation/Splunk/latest/Troubleshooting/ulimitErrors)
   - core file size (ulimit -c 1073741824 (1 GB))
   - open files (ulimit -n 48 x default (48 x 1024 = 49,152) (65536))
   - max user processes (ulimit -u 12 x default (12 x 1024 = 12,288) (258048))
@@ -171,7 +171,7 @@ Hardware requirements and sizing are discussed in detail in Architecting and Dep
 - Handles all search requests and returns results
 
 #### Splunk Web
- 
+
 - Splunk Web is browser-based user interface
 - Provides both a search and management front end for splunkd process
 - Runs on port **8000** by default
@@ -232,7 +232,7 @@ Hardware requirements and sizing are discussed in detail in Architecting and Dep
 
 - **Free license**
   - Disables alerts, authentication, clustering, distributed search,
-    summarization, and forwarding to non-Splunk servers 
+    summarization, and forwarding to non-Splunk servers
   - Allows **500 MB/day** of indexing and forwarding to other Splunk instances
 
 - **Forwarder license**
@@ -360,21 +360,45 @@ name.
 
 #### Search Time Precedence Order
 
-1. etc/users/\<user\>/app/local
-2. etc/apps/app/local
-3. etc/apps/app/default
-4. etc/system/local
-5. etc/system/default
+Depends on search app context.
+
+Search time precedence order:
+
+1. etc/users/USER/APP/local
+2. etc/apps/APP/local
+3. etc/apps/APP/default
+4. etc/apps/search/local
+5. etc/apps/search/default
+6. etc/system/local
+7. etc/system/default
+
+Build config file:
+
+1. system/default
+2. system/local
+3. apps/search/default
+4. apps/search/local
+5. apps/APP/default
+6. apps/APP/local
+7. users/USER/APP/local
 
 #### Search Time Precedence Order (Sharing KOs)
 
 Example: If Mary shares the macro at the app level, then the definition is
-moved to the SPLUNK_HOME/etc/apps/**search/local** dirctory.
+moved to the **SPLUNK_HOME/etc/apps/search/local** dirctory.
 
 Example: If the macro is then shared globally then the **.meta** file in the
-metadata folder of the app is updated
+metadata folder of the search app is updated
 
-> export = system
+local.meta
+```
+[macros/test2]
+access = read : [ * ]
+export = system
+owner = mary
+version = 7.1.0
+modtime = 1537527828.580874000
+```
 
 #### Configuration Validation Command btool
 
@@ -382,8 +406,8 @@ metadata folder of the app is updated
 - Shows on-disk configuration for requested file
 - Useful for checking the configuration scope and permission rules
 - Run splunk btool check each time Splunk starts  
-  Use --debug to display the exact .conf file location  
-  Add --user=\<user\> --app=\<app\> to see the user/app context layering
+  - Use --debug to display the exact .conf file location  
+  - Add --user=\<user\> --app=\<app\> to see the user/app context layering
 
 Examples:
 
@@ -393,9 +417,23 @@ Examples:
 > splunk btool inputs list monitor:///var/log  
 > splunk btool inputs list monitor:///var/log --debug  
 
+Example:
+> splunk btool inputs list monitor:///var/log/secure.log --debug
+
 #### Overriding Defaults
 
 There are default settings in SPLUNK\_HOME/etc/**system/default** and SPLUNK\_HOME/etc/apps/**search/default**
+
+- The correct method to override these settings is to do so in the local directory at the same scope
+- Only add the items you are overriding — do not make a copy of the entire configuration file
+
+Example:
+- To disable a default attribute TRANSFORMS for [syslog]:
+# etc/system/local/props.conf
+```
+[syslog]
+TRANSFORMS =
+```
 
 ### 4.0 SPLUNK INDEXES
 
@@ -423,6 +461,31 @@ There are default settings in SPLUNK\_HOME/etc/**system/default** and SPLUNK\_HO
 **summary** : default index for summary indexing system
 **main** : default index for inputs, located in the defaultdb directory
 
+#### Metrics Indexing
+
+- Splunk supports metrics by including an index format for metrics and certain types of log collection
+- Supports the following inputs
+  - The StatsD extension over UDP/TCP
+  - Plain StatsD extension with dimensions over UDP/TCP
+  - Collected over HTTPs using HTTP Event Collector (HEC)
+  - CSV format files and custom source type
+- Event-based indexes are not the same as metrics-based indexes
+  - An event index cannot be converted into a metrics index (or vice-versa)
+  - Metrics events are not searchable
+    - Only works with indexed fields/mstats
+
+> datatype = metric
+
+indexes.conf
+```
+[metrics_index]
+coldPath = $Splunk_DB/metrics_index/colddb
+homePath = $Splunk_DB/metrics_index/db
+thawedPath = $Splunk_DB/metrics_index/thaweddb
+maxTotalDataSizeMB = 512000
+datatype = metric
+```
+
 #### Why create Indexes?
 
 1. Access control
@@ -434,7 +497,9 @@ There are default settings in SPLUNK\_HOME/etc/**system/default** and SPLUNK\_HO
 - A bucket is a directory containing a set of raw data and associated index files
 - Buckets have a maximum data size and a time span
 
-**db** = Hot & warm buckets
+Directorys:
+
+**db** = Hot & Warm buckets
 
 Hot buckets are the newest buckets open for writes (readable). Events stream to hot buckets split by time. Transition to warm (read-only) when size or time limits are hit.
 
@@ -490,8 +555,17 @@ Allocate disk space to meet data retention needs
 
 #### Adding an Index
 
-CLI: 
+Splunk Web: *Settings > Indexes > New Index*
+
+CLI:
 > splunk add index \<index\_name\>
+
+Default Hot/Warm/Cold bucket size: Auto (750MB)
+
+Use **auto_high_volume** when daily volume is >10GB
+
+Directory default:  
+$SPLUNL_DB/*indexname*/[db|colddb|thaweddb]
 
 #### Index Data Integrity Check
 
@@ -527,8 +601,8 @@ enableDataIntegrityControl = 0
   - Splunk freezes entire buckets, not individual events
   - If a bucket spans more than one day, you can't meet the 90 day requirement
 - Configuration option:
-  - frozenTimePeriodInSecs = 7776000 (90 days)
-  - maxHotSpanSecs = 86400 (24 hours)
+  - *frozenTimePeriodInSecs* = 7776000 (90 days)
+  - *maxHotSpanSecs* = 86400 (24 hours)
 
 #### Last Chance Index
 
@@ -543,7 +617,7 @@ enableDataIntegrityControl = 0
 - The fishbucket index stores the checkpoint information for monitor inputs
 - To reset the individual input checkpoint, use the btprobe command:
 
->splunk cmd btprobe –d SPLUNK\_HOME/var/lib/splunk/fishbucket/splunk\_private\_db --file \<source\> --reset
+> splunk cmd btprobe –d SPLUNK\_HOME/var/lib/splunk/fishbucket/splunk\_private\_db --file \<source\> --reset
 
 #### Restoring a Frozen Bucket
 
@@ -554,7 +628,7 @@ To thaw a frozen bucket:
 
 - Events in thaweddb are searchable along with other events
 - They will not be frozen, nor do they count against the index max size
-- Delete the thawed bucket directory when no longer needed and restart Splunk 
+- Delete the thawed bucket directory when no longer needed and restart Splunk
 
 ### 5.0 SPLUNK USER MANAGEMENT
 
@@ -609,17 +683,19 @@ In larger or production environments, forwarders can be managed remotely
 
 #### Forwarder Configuration Steps
 
-1. Set up a receiving port on each indexer
+1. Set up a receiving port on each indexer (9997)
    - It is only necessary to do this once
-2. Download and install Universal Forwarder
+2. Download and install Universal Forwarder software
 3. Set up forwarding on each forwarder
-   - Either manually or using Deployment Server
+   - Either manually or using Deployment Server (DS)
 4. Add inputs on forwarders, using one of the following:
    - Forwarder management
    - CLI:
      > splunk enable listen <port>
+
    - Edit inputs.conf manually
      > [splunktcp://portNumber]
+
 
 #### Defining Target Indexers on the Forwarder
 
@@ -792,7 +868,7 @@ Splunk index-time process (data ingestion) can be broken down into three phases:
 
 Source type is Splunk’s way of categorizing the type of data Splunk indexing processes frequently reference source type
 - Many searches, reports, dashboards, apps, etc. also rely on source type
-- Splunk will try to determine the source type for you 
+- Splunk will try to determine the source type for you
   - If Splunk recognizes the data, then it assigns one from the pretrained sourcetypes
   - If one is explicitly specified, then Splunk will not try to determine the source type You can explicitly set source type with Splunk Web, CLI, or by modifying inputs.conf
   - Otherwise, Splunk uses the name of the file as the source type
@@ -824,11 +900,11 @@ inputs.conf
 
 #### Defining Target Indexers on the Forwarder
 
-Execute on the forwarder: 
+Execute on the forwarder:
 > splunk add forward-server indexer:receiving-port
 
 For example:
-> splunk add forward-server 10.1.2.3:9997 
+> splunk add forward-server 10.1.2.3:9997
 
 configure the outputs.conf as follows>
 
@@ -845,7 +921,7 @@ server = 10.1.2.3:9997
 
 **Indexer:**
 
-From CLI, run 
+From CLI, run
 > splunk display listen
 
 **Forwarder:**
@@ -1043,7 +1119,7 @@ Client to Indexer Data Connection: **Receiving Port (9997)**
 
 #### What's in a Deployment App?
 
-Deployment Server/Forwarder Management works by deploying one or more apps from the SPLUNK\_HOME/etc/deployment-apps folder to the remote forwarders (clients) 
+Deployment Server/Forwarder Management works by deploying one or more apps from the SPLUNK\_HOME/etc/deployment-apps folder to the remote forwarders (clients)
 - They are deployed to the forwarder's SPLUNK\_HOME/etc/apps folder by default
 
 An app can have configuration files, scripts, and other resources
@@ -1068,12 +1144,12 @@ A set of clients can be grouped based on:
 Overview of how to set up Forwarder Management in your implementation:
 1. On the deployment server, add one or more apps in SPLUNK\_HOME/etc/deployment-apps
 2. In the Forwarder Management UI, create one or more server classes
-3. On forwarders, run 
+3. On forwarders, run
 > splunk set deploy-poll <deployServer:port>
 
 #### Configuring Deployment Clients
 
-Run this during forwarder installation or later splunk 
+Run this during forwarder installation or later splunk
 > set deploy-poll deployServer:port
 
 Creates deploymentclient.conf in SPLUNK_HOME/etc/system/local
@@ -1090,7 +1166,7 @@ clientName = webserver_1
 phoneHomeIntervalInSecs = 600
 ```
 
-On the deployment client 
+On the deployment client
 - Use splunk show deploy-poll to check the deployment server settings
 - Use splunk list forward-server to check the indexer destination settings
 
@@ -1137,7 +1213,7 @@ A monitor input can define a directory tree as the data source
 - Any files added to the directory tree in the future are included
   - Automatically detects and handles log file rotation
 
-The input settings are applied to all files in the directory 
+The input settings are applied to all files in the directory
 - sourcetype, host and index -- if specified -- are applied to all files in the tree
 - source= the file name (absolute path)
 - Automatic sourcetyping is recommended for directories that contain mixed file types
@@ -1192,12 +1268,12 @@ Consider using ignoreOlderThan, if applicable
 
 #### Overriding the Host Field
 
-You can override the default host value 
+You can override the default host value
 - Explicitly set the host value
 - Set the host based on a directory name
 - Set the host based on a regular expression
 
-Setting the Host: 
+Setting the Host:
 > host\_segment = \<integer\>  
 > host\_regex = \<regular expression\>  
 
@@ -1493,7 +1569,7 @@ acceptFrom = "!45.42.151/24, !57.73.224/19,
 - Source
 - Index
 
-*Parsing phase* 
+*Parsing phase*
 
 - Line breaking (event boundary)
 - Date/timestamp extraction
