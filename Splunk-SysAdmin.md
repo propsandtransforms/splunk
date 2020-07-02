@@ -429,7 +429,8 @@ There are default settings in SPLUNK\_HOME/etc/**system/default** and SPLUNK\_HO
 
 Example:
 - To disable a default attribute TRANSFORMS for [syslog]:
-# etc/system/local/props.conf
+
+etc/system/local/props.conf
 ```
 [syslog]
 TRANSFORMS =
