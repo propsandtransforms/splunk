@@ -455,12 +455,12 @@ TRANSFORMS =
 - Can override on a per-index basis
 - Splunk ships with some indexes already installed
 
-\_**internal** : Splunk indexes its own logs and metrics from its processing here
-\_**audit** : Splunk stores its audit trails and other optional auditing information
-\_**introspection** : tracks system performance, Splunk resource usage data, and provides MC with performance data
-\_**thefishbucket** : contains checkpoint information for file monitoring inputs
-**summary** : default index for summary indexing system
-**main** : default index for inputs, located in the defaultdb directory
+\_**internal** : Splunk indexes its own logs and metrics from its processing here  
+\_**audit** : Splunk stores its audit trails and other optional auditing information  
+\_**introspection** : tracks system performance, Splunk resource usage data, and provides MC with performance data  
+\_**thefishbucket** : contains checkpoint information for file monitoring inputs  
+**summary** : default index for summary indexing system  
+**main** : default index for inputs, located in the defaultdb directory  
 
 #### Metrics Indexing
 
@@ -702,9 +702,10 @@ In larger or production environments, forwarders can be managed remotely
 
 - Execute on the forwarder for each destination indexer:
 > splunk add forward-server indexer:receiving-port  
-> example, splunk add forward-server 10.1.2.3:9997
 
-configures the outputs.conf as:
+> splunk add forward-server 10.1.2.3:9997
+
+outputs.conf:
 ```
 [tcpout]
 defaultGroup = default-autolb-group
@@ -717,9 +718,10 @@ server = 10.1.2.3:9997
 #### Add UF Input by CLI
 
 > ./splunk add monitor /var/log/  
+
 > ./splunk add monitor -source c:\Windows\windowsupdate.log -index newindex
 
-### 8\.0 Distributed Search
+### 8.0 Distributed Search
 
 ```
     8.1     Describe how distributed search works
@@ -822,6 +824,7 @@ Splunk supports many types of data input
 **Script output** : executing a script and using the output from the script as the input  
 **Windows logs** : monitoring Windows event logs, Active Directory, etc.  
 **HTTP** : using the HTTP Event Collector  
+
 And more...
 
 #### Default Metadata Settings
@@ -907,8 +910,7 @@ Execute on the forwarder:
 For example:
 > splunk add forward-server 10.1.2.3:9997
 
-configure the outputs.conf as follows>
-
+outputs.conf
 ```
 [tcpout]
 defaultGroup = default-autolb-group
