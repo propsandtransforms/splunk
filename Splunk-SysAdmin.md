@@ -107,12 +107,13 @@ Universal Forwarder includes
 - Splunk starts **automatically** on Windows
 - Splunk must be **manually** started on \*NIX until boot-start is enabled
 
-Run as root:
-> ./splunk enable boot-start (init.d)
->
-> ./splunk enable boot-start -systemd-managed 1 (systemd)
+init.d:
+> ./splunk enable boot-start
 
-Run as root:
+systemd:
+> ./splunk enable boot-start -systemd-managed 1
+
+Run as user:
 > ./splunk enable boot-start –user bob
 
 On Windows, the installer configures Splunk software to start at machine
@@ -124,24 +125,24 @@ startup
 
 #### Time Synchronization
 
-- Best practice: Use a time synchronization service such as NTP
-- Splunk searches depend on accurate time
+- Best practice: Use a time synchronization service such as **NTP**
+  - Splunk searches depend on accurate time
 - Correct event timestamping is essential
 - It is imperative that your Splunk indexer and production servers have standardized time configuration
-- Clock skew between hosts can affect search results
+  - Clock skew between hosts can affect search results
 
 #### Splunk Default Ports
 
-| Usage| Splunk Enterprise | Universal Forwarder |
-| ----- | ----------------- | ------------------- |
-| splunkd | 8089 | 8089 |
-| Splunk Web | 8000 | - |
-| Web app-server proxy | 8065 | - |
-| KV Store | 8191 | - |
-| S2S receiving port(s) | No default | - |
-| Any network/http input(s)|No default | No default |
-| Index replication port(s) | No default | - |
-| Search replication port(s) | No default | - |
+| Usage                      | Splunk Enterprise   | Universal Forwarder |
+| -------------------------- | ------------------- | ------------------- |
+| splunkd                    | **8089**            | **8089**            |
+| Splunk Web                 | **8000**            | n/a                 |
+| Web app-server proxy       | **8065**            | n/a                 |
+| KV Store                   | **8191**            | n/a                 |
+| S2S receiving port(s)      | No default          | n/a                 |
+| Any network/http input(s)  | No default          | No default          |
+| Index replication port(s)  | No default          | n/a                 |
+| Search replication port(s) | No default          | n/a                 |
 
 #### Linux Setting Recommendations
 
@@ -155,14 +156,17 @@ startup
 
 #### Reference Servers Hardware
 
-- Hardware requirements and sizing are discussed in detail in Architecting and Deploying Splunk class (https://docs.splunk.com/Documentation/Splunk/latest/Capacity/Referencehardware)
+Search Heads: 12 GB RAM and **4 CPUs** quad-core per CPU
+Indexer: 12 GB RAM and **12 CPU cores**
+
+Hardware requirements and sizing are discussed in detail in Architecting and Deploying Splunk class (https://docs.splunk.com/Documentation/Splunk/latest/Capacity/Referencehardware)
 
 #### splunkd
 
 - Runs on port **8089** (default) using SSL
 - Spawns and controls Splunk child processes (helpers)
-	- Splunk Web proxy, KV store, and Introspection services
-	- Each search, scripted input, or scripted alert
+  - Splunk Web proxy, KV store, and Introspection services
+  - Each search, scripted input, or scripted alert
 - Accesses, processes, and indexes incoming data
 - Handles all search requests and returns results
 
@@ -171,23 +175,26 @@ startup
 - Splunk Web is browser-based user interface
 - Provides both a search and management front end for splunkd process
 - Runs on port **8000** by default
+- No SSL by default
+
+> http://<server_name>:<port>
 
 #### The Splunk Command Line Interface (CLI)
 
-- splunk is an executable command in the bin directory
+- **splunk** is an executable command in the bin directory
 - Same syntax is used on all supported platforms
 
-| Command | Operation |
-| -------------- | --------------- |
-| splunk help | Display a usage summary |
-| splunk help \<object\> | Display the details of a specific object |
-| splunk [start \| stop \| restart] | Manages the Splunk processes |
-| splunk start –-accept-license | Automatically accept the license without prompt |
-| splunk status | Display the Splunk process status |
-| splunk show splunkd-port | Show the port that the splunkd listens on |
-| splunk show web-port | Show the port that Splunk Web listens on |
-| splunk show servername | Show the servername of this instance |
-| splunk show default-hostname | Show the default host name used for all data inputs |
+| Command                           | Operation                                           |
+| --------------------------------- | --------------------------------------------------- |
+| splunk help                       | Display a usage summary                             |
+| splunk help \<object\>            | Display the details of a specific object            |
+| splunk [start \| stop \| restart] | Manages the Splunk processes                        |
+| splunk start --accept-license     | Automatically accept the license without prompt     |
+| splunk status                     | Display the Splunk process status                   |
+| splunk show splunkd-port          | Show the port that the splunkd listens on           |
+| splunk show web-port              | Show the port that Splunk Web listens on            |
+| splunk show servername            | Show the servername of this instance                |
+| splunk show default-hostname      | Show the default host name used for all data inputs |
 
 #### Enabling MC in Standalone Mode
 
@@ -198,11 +205,9 @@ startup
 #### Enabling MC Platform Alerts
 
 - Effective operation of your Splunk environment is timely identification and notification of critical conditions
-- Any item over 80% mark can’t be good
+  - Any item over 80% mark can’t be good
 - MC Alerts Setup provides a number of preconfigured platform alerts Platform alerts are disabled by default
 - Tweak parameters such as alert schedule, suppression time, and alert actions
-
-### Splunk Deployment - Distibuted
 
 ### 2.0 License Management
 
@@ -247,7 +252,7 @@ startup
   - It is the data (full size) that **flows through the parsing pipeline**, per day
   - It is **not** the amount of **storage** used by the indexes
 
-- What does not count against your license daily quota?
+- What does *not* count against your license daily quota?
   - Replicated data (Index Clusters)
   - Summary indexes
   - Splunk internal logs (\_internal, \_audit, etc. indexes)
@@ -255,6 +260,15 @@ startup
 
 - **Metrics data** counts against a license at a **fixed 150 bytes** per metric event
   - Draws from the same license quota as event data
+
+#### Adding a License
+
+Can use CLI or Splunk Web (upload or copy/paste)
+- License group change requires a restart
+- Licenses are stored under SPLUNK_HOME/etc/licenses
+- Multiple licenses of the same type are stacked (added together)
+
+> splunk add licenses <path_to_file>
 
 ### 3.0 SPLUNK CONFIGURATION FILES
 
@@ -272,14 +286,15 @@ startup
   - \*.conf.spec
   - \*.conf.example
   - Splunk documentation: docs.splunk.com
+  - The syntax is case-sensitive
 
 #### Commonly Used Splunk Configuration Files
 
-| Component | inputs.conf | props.conf | outputs.conf |
-| --------- | ----------- | ---------- | ------------ |
+| Component           | inputs.conf | props.conf | outputs.conf |
+| ------------------- | ----------- | ---------- | ------------ |
 | Universal Forwarder | Defines what data to collect | Limited parsing such as character encoding, refine MetaData, event breaks | Defines where to forward the data |
-| Indexer | Defines what data to collect including data coming from forwarders | Refine MetaData at event level, event breaks, time extraction, TZ, data transformation | Does not need an outputs.conf as the Indexer does not forward the data |
-| Search Head | Defines what data to collect including Splunk logs | Field Extractions (search time), Lookups, etc | Defines where to forward the data. You may want to send the data to the Indexer especially the internal logs |
+| Indexer             | Defines what data to collect including data coming from forwarders | Refine MetaData at event level, event breaks, time extraction, TZ, data transformation | Does not need an outputs.conf as the Indexer does not forward the data |
+| Search Head         | Defines what data to collect including Splunk logs | Field Extractions (search time), Lookups, etc | Defines where to forward the data. You may want to send the data to the Indexer especially the internal logs |
 
 ### Default vs. Local Configuration
 
@@ -289,6 +304,9 @@ startup
 - Avoid storing configurations in SPLUNK\_HOME/etc/system
   - Manage your configs in the appropriate app under etc/apps/\<appname\>/local
 - If you don't have an app you need to create one
+
+- default = Overwritten on update
+- local   = Preserved on update
 
 #### Index Time vs. Search Time
 
@@ -310,16 +328,31 @@ For example:
   - Regardless of the number of inputs.conf files in various apps or the system path, only one master inputs configuration model exists in memory at runtime
 - If there are no duplicate stanzas or common settings between the files, the result is the union of all files
 - If there are conflicts, the setting with the highest precedence is used
-  - Remember that **local always takes precedence** over default
+  - Remember that **local** always takes precedence over **default**
 
 #### Index Time Precedence Order
 
-1. etc/system/local
-2. etc/apps/search/local
-3. etc/apps/unix/local
-4. etc/apps/search/default
-5. etc/apps/unix/default
-6. etc/system/default
+Server is performing non-user background processing:
+
+Precedence Order:
+
+1. system/local
+2. app/local
+3. app/default
+4. system/default
+
+**system/local** always wins
+
+Build config file:
+
+```
+1. etc/system/default
+2. etc/apps/unix/default
+3. etc/apps/search/default
+4. etc/apps/unix/local
+5. etc/apps/search/local
+6. etc/system/local
+```
 
 If two or more apps at the same level of precedence have conflicts between
 them, the conflicts are resolved in **lexicographical** order by app directory
@@ -632,8 +665,9 @@ server = 10.1.2.3:9997
 - Install Splunk on each search head and peers (indexers)
 - Set up the same indexes on all peers
 - All search heads and peers should use a **license master**
-- Add a user to each peer with a role that has the edit\_user capability
-- Used only for authenticating a search head to the peers
+- Add a user to each peer with a role that has the *edit\_user* capability
+  - Used only for authenticating a search head to the peers
+  - You should create an account on each peer for this purpose
 - On the search head, configure search peers by selecting: *Settings > Distributed search*
   - Distributed search is **turned on** by default, so just add search peers
 
@@ -641,20 +675,30 @@ server = 10.1.2.3:9997
 
 - Knowledge bundles are distributed to search peers by the search head when a distributed search is initiated
 - They contain the knowledge objects required by the indexers for searching
-- Knowledge bundles’ locations:
-> $SPLUNK\_HOME/var/run (on the search head)  
-> $SPLUNK\_HOME/var/run/searchpeers (on the search peer)
+- Knowledge bundles’ locations:  
+  $SPLUNK\_HOME/var/run (on the search head)  
+  $SPLUNK\_HOME/var/run/searchpeers (on the search peer)
 
-- Replication status of knowledge bundles can be viewed from Replication Status column of the Splunk Web home page *Settings > Distributed search > Search peers*
+- Replication status of knowledge bundles can be viewed from **Replication Status** column of the Splunk Web home page *Settings > Distributed search > Search peers*
 
 #### How Many Search Heads?
 
-- One dedicated search head can handle around 8 to 12 simultaneous searches (ad hoc or scheduled)
+- One dedicated search head can handle around **8 to 12** simultaneous searches (ad hoc or scheduled)
   - Exact numbers depend on types of searches and the hardware of the search head; especially number of CPU cores
 - Search heads can be added to the distributed group at any time
-- Search heads can be dedicated or clustered
+- Search heads can be **dedicated** or **clustered**
 - Dedicated search heads don't share knowledge objects (separate small teams)
 - Search head cluster shares a common set of knowledge objects (large teams)
+
+#### Search Peer Quarantine
+
+If a search peer is experiencing performance issues, it can be quarantined from participating in future searches
+- Allows you to perform live troubleshooting by not stopping the search peer
+- It is prevented from performing new searches but continues to attempt to service any currently running searches
+- Only affects the relationship between search peer and search head
+
+From the search head, run the following CLI command:
+> splunk edit search-server –auth <user>:<password> <host:<port> -action quarantine
 
 #### Distributed Search Best Practice
 
@@ -662,6 +706,25 @@ server = 10.1.2.3:9997
 - Simplifies the process of managing indexes
 - Can diagnose from other search heads if one goes down
 - Allows other search heads to access all summary indexes
+
+outputs.conf
+```
+[indexAndForward]
+index = false
+
+[tcpout]
+defaultGroup = default-autolb-group
+forwardedindex.filter.disable = true
+indexAndForward = false
+[tcpout:default-autolb-group]
+server=idx1:9997,idx2:9997
+```
+
+- Splunk recommends that you dedicate a host for each role
+- Disable Web on instances that don’t need the web interface
+> ./splunk disable webserver
+
+- Deployment Server can be used to manage Splunk Instance remotely
 
 ---
 ## DATA ADMINISTRATOR COURSE
